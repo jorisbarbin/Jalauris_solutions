@@ -11,6 +11,12 @@ nav?.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
   menuButton?.setAttribute('aria-label', 'Ouvrir le menu');
 }));
 document.getElementById('year').textContent = new Date().getFullYear();
+menuButton?.addEventListener('keydown', event => {
+  if (event.key === 'Escape') { nav?.classList.remove('open'); menuButton.setAttribute('aria-expanded', 'false'); menuButton.setAttribute('aria-label', 'Ouvrir le menu'); }
+});
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && nav?.classList.contains('open')) { nav.classList.remove('open'); menuButton?.setAttribute('aria-expanded', 'false'); menuButton?.setAttribute('aria-label', 'Ouvrir le menu'); menuButton?.focus(); }
+});
 // Remplacer cette adresse avant la mise en ligne par une adresse professionnelle vérifiée.
 const CONTACT_EMAIL = 'CONTACT_EMAIL_A_CONFIGURER';
 document.getElementById('contact-form')?.addEventListener('submit', e => {
