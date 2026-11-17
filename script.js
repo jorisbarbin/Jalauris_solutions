@@ -1,23 +1,22 @@
 const menuButton = document.querySelector('.menu-toggle');
-const nav = document.querySelector('.nav');
-menuButton?.addEventListener('click', () => {
-  const opened = nav.classList.toggle('open');
-  menuButton.setAttribute('aria-expanded', String(opened));
-  menuButton.setAttribute('aria-label', opened ? 'Fermer le menu' : 'Ouvrir le menu');
-});
-nav?.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
-  nav.classList.remove('open');
+const nav = document.querySelector('.navigation');
+function closeMenu() {
+  nav?.classList.remove('open');
   menuButton?.setAttribute('aria-expanded', 'false');
   menuButton?.setAttribute('aria-label', 'Ouvrir le menu');
-}));
-document.getElementById('year').textContent = new Date().getFullYear();
-menuButton?.addEventListener('keydown', event => {
-  if (event.key === 'Escape') { nav?.classList.remove('open'); menuButton.setAttribute('aria-expanded', 'false'); menuButton.setAttribute('aria-label', 'Ouvrir le menu'); }
+}
+menuButton?.addEventListener('click', () => {
+  const open = nav.classList.toggle('open');
+  menuButton.setAttribute('aria-expanded', String(open));
+  menuButton.setAttribute('aria-label', open ? 'Fermer le menu' : 'Ouvrir le menu');
 });
-document.addEventListener('keydown', event => {
-  if (event.key === 'Escape' && nav?.classList.contains('open')) { nav.classList.remove('open'); menuButton?.setAttribute('aria-expanded', 'false'); menuButton?.setAttribute('aria-label', 'Ouvrir le menu'); menuButton?.focus(); }
+nav?.querySelectorAll('a').forEach(link => link.addEventListener('click', closeMenu));
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && nav?.classList.contains('open')) { closeMenu(); menuButton?.focus(); }
 });
-// Remplacer cette adresse avant la mise en ligne par une adresse professionnelle vérifiée.
+document.getElementById('year').textContent = String(new Date().getFullYear());
+
+// À configurer avant toute utilisation commerciale du formulaire.
 const CONTACT_EMAIL = 'CONTACT_EMAIL_A_CONFIGURER';
 document.getElementById('contact-form')?.addEventListener('submit', e => {
   e.preventDefault();
@@ -25,13 +24,15 @@ document.getElementById('contact-form')?.addEventListener('submit', e => {
   if (!form.reportValidity()) return;
   const helper = document.getElementById('form-helper');
   if (CONTACT_EMAIL === 'CONTACT_EMAIL_A_CONFIGURER') {
-    helper.textContent = 'La destination du formulaire doit être configurée avant utilisation. Renseignez CONTACT_EMAIL dans script.js.';
+    helper.textContent = "L'adresse de contact doit être configurée pour activer ce formulaire.";
     helper.setAttribute('role', 'alert');
     return;
   }
   const data = new FormData(form);
-  const value = key => String(data.get(key) || '').trim();
-  const subject = `Projet JALAURIS — ${value('besoin')}`;
-  const body = `Bonjour,\n\nJe souhaite vous présenter un projet.\n\nNom : ${value('nom')}\nEntreprise : ${value('entreprise')}\nE-mail : ${value('email')}\nBesoin : ${value('besoin')}\n\nDescription :\n${value('message')}\n`;
-  window.location.href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  const get = key => String(data.get(key) || '').trim();
+  const subject = 'Projet JALAURIS — ' + get('besoin');
+  const body = 'Bonjour,\n\nJe souhaite vous présenter un projet.\n\nNom : ' + get('nom') +
+    '\nEntreprise : ' + get('entreprise') + '\nEmail : ' + get('email') +
+    '\nBesoin : ' + get('besoin') + '\n\nDescription :\n' + get('message');
+  window.location.href = 'mailto:' + CONTACT_EMAIL + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
 });
