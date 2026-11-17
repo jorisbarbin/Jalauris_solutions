@@ -17,17 +17,13 @@ document.addEventListener('keydown', e => {
 document.getElementById('year').textContent = String(new Date().getFullYear());
 
 // À configurer avant toute utilisation commerciale du formulaire.
-const CONTACT_EMAIL = 'CONTACT_EMAIL_A_CONFIGURER';
+const CONTACT_EMAIL = 'solution@jalauris.fr';
 document.getElementById('contact-form')?.addEventListener('submit', e => {
   e.preventDefault();
   const form = e.currentTarget;
   if (!form.reportValidity()) return;
   const helper = document.getElementById('form-helper');
-  if (CONTACT_EMAIL === 'CONTACT_EMAIL_A_CONFIGURER') {
-    helper.textContent = "L'adresse de contact doit être configurée pour activer ce formulaire.";
-    helper.setAttribute('role', 'alert');
-    return;
-  }
+
   const data = new FormData(form);
   const get = key => String(data.get(key) || '').trim();
   const subject = 'Projet JALAURIS — ' + get('besoin');
