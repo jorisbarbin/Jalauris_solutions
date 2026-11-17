@@ -12,6 +12,7 @@
   <link rel="icon" href="/favicon.ico?v=4" type="image/x-icon" sizes="32x32">
   <link rel="shortcut icon" href="/favicon.ico?v=4" type="image/x-icon">
   <link rel="stylesheet" href="styles.css">
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
   <script src="script.js" defer></script>
 </head>
 <body>
@@ -90,7 +91,7 @@
         <div>
           <p class="eyebrow">PRENONS CONTACT</p>
           <h2 id="titre-contact">Parlons de votre projet.</h2>
-          <p>Vous avez un besoin informatique ou une question sur nos prestations ? Présentez-nous votre projet pour engager un premier échange.<br><a class="email-link" href="mailto:solution@jalauris.fr">solution@jalauris.fr</a></p>
+          <p>Vous avez un besoin informatique ou une question sur nos prestations ? Présentez-nous votre projet pour engager un premier échange.</p>
         </div>
         <form class="contact-form" id="contact-form">
           <div class="form-grid">
@@ -100,8 +101,9 @@
           <label>Adresse e-mail <span>*</span><input name="email" type="email" autocomplete="email" maxlength="200" required placeholder="vous@entreprise.fr"></label>
           <label>Votre besoin<select name="besoin"><option>Conception de logiciel sur mesure</option><option>Prestations informatiques</option><option>Conseil en gestion</option><option>Vente de logiciels</option><option>Autre demande</option></select></label>
           <label>Votre message <span>*</span><textarea name="message" rows="4" maxlength="4000" required placeholder="Parlez-nous de votre projet..."></textarea></label>
-          <button class="button-primary" type="submit">Préparer mon message <span aria-hidden="true">↗</span></button>
-          <p class="form-note" id="form-helper">Ce formulaire ouvre votre application de messagerie avec un message prérempli. Aucune donnée n'est enregistrée par le site.</p>
+          <div id="turnstile-widget" class="turnstile-widget" aria-label="Vérification anti-robots"></div>
+          <button class="button-primary" id="submit-contact" type="submit" disabled>Activer le formulaire <span aria-hidden="true">↗</span></button>
+          <p class="form-note" id="form-helper" role="status" aria-live="polite">Configuration du formulaire en cours. Vous pourrez envoyer votre demande directement depuis cette page.</p>
         </form>
       </div>
     </section>
@@ -109,9 +111,9 @@
   <footer class="footer">
     <div class="container footer-main">
       <div><strong>JALAURIS <span>SOLUTIONS</span></strong><p>Solutions informatiques et conseil aux entreprises.</p></div>
-      <nav aria-label="Liens de pied de page"><a href="#activites">Nos activités</a><a href="#societe">La société</a><a href="#contact">Contact</a><a href="mailto:solution@jalauris.fr">solution@jalauris.fr</a></nav>
+      <nav aria-label="Liens de pied de page"><a href="#activites">Nos activités</a><a href="#societe">La société</a><a href="#contact">Contact</a><a href="mailto:rgpd@jalauris.fr">Contact RGPD</a></nav>
     </div>
-    <div class="container footer-bottom"><span>© <span id="year"></span> JALAURIS. Tous droits réservés.</span><span>Mentions légales et confidentialité : informations à compléter.</span></div>
+    <div class="container footer-bottom"><span>© <span id="year"></span> JALAURIS. Tous droits réservés.</span><span>Mentions légales à compléter · Contact données personnelles : <a href="mailto:rgpd@jalauris.fr">rgpd@jalauris.fr</a></span></div>
   </footer>
 </body>
 </html>
