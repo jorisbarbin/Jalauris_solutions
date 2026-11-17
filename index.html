@@ -1,71 +1,117 @@
 <!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#10283e" />
-  <meta name="description" content="JALAURIS conçoit des applications métiers, tableaux de bord et automatisations sur mesure pour les entreprises de toutes tailles." />
-  <title>JALAURIS — Solutions informatiques sur mesure</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="icon" href="/favicon.ico?v=4" type="image/x-icon" sizes="32x32" />
-  <link rel="shortcut icon" href="/favicon.ico?v=4" type="image/x-icon" />
-  <link rel="stylesheet" href="styles.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10283e">
+  <meta name="description" content="JALAURIS Solutions accompagne les entreprises dans la conception de logiciels sur mesure, les prestations informatiques, le conseil en gestion et la vente de logiciels.">
+  <title>JALAURIS Solutions — Informatique et conseil aux entreprises</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" href="/favicon.ico?v=4" type="image/x-icon" sizes="32x32">
+  <link rel="shortcut icon" href="/favicon.ico?v=4" type="image/x-icon">
+  <link rel="stylesheet" href="styles.css">
+  <script src="script.js" defer></script>
 </head>
 <body>
-  <a class="skip" href="#contenu">Aller au contenu</a>
+  <a class="skip-link" href="#contenu">Aller au contenu</a>
   <header class="site-header" id="haut">
-    <div class="container nav-wrap">
-      <a class="brand" href="#haut" aria-label="JALAURIS, retour à l'accueil">
-        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19 5H45L60 32L45 59H19L4 32L19 5Z" stroke="currentColor" stroke-width="3.4" stroke-linejoin="round"/><path d="M38 18V42c0 9-6 13-14 13-6 0-10-3-13-8" stroke="#fff" stroke-width="5.5" stroke-linecap="round"/><path d="M23 18H43" stroke="#fff" stroke-width="5.5" stroke-linecap="round"/></svg></span>
-        <span class="brand-copy"><strong>JALAURIS</strong><small>SOLUTIONS</small></span>
+    <div class="container header-inner">
+      <a class="brand" href="#haut" aria-label="JALAURIS Solutions, accueil">
+        <span class="brand-icon" aria-hidden="true">
+          <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19 5H45L60 32L45 59H19L4 32L19 5Z" stroke="currentColor" stroke-width="3.4" stroke-linejoin="round"/><path d="M38 18V42c0 9-6 13-14 13-6 0-10-3-13-8M23 18H43" stroke="#fff" stroke-width="5.5" stroke-linecap="round"/></svg>
+        </span>
+        <span class="brand-name"><strong>JALAURIS</strong><small>SOLUTIONS</small></span>
       </a>
       <button class="menu-toggle" type="button" aria-label="Ouvrir le menu" aria-controls="navigation" aria-expanded="false"><span></span><span></span><span></span></button>
-      <nav class="nav" id="navigation" aria-label="Navigation principale">
-        <a href="#expertises">Expertises</a><a href="#methode">Notre approche</a><a href="#realisations">Réalisations</a><a href="#apropos">À propos</a><a class="nav-cta" href="#contact">Parlons de votre projet <span aria-hidden="true">↗</span></a>
+      <nav class="navigation" id="navigation" aria-label="Navigation principale">
+        <a href="#haut">Accueil</a>
+        <a href="#activites">Nos activités</a>
+        <a href="#societe">La société</a>
+        <a class="nav-contact" href="#contact">Contact <span aria-hidden="true">↗</span></a>
       </nav>
     </div>
   </header>
   <main id="contenu">
-    <section class="hero">
-      <div class="hero-grid" aria-hidden="true"></div>
-      <div class="container hero-layout">
-        <div class="hero-copy">
-          <p class="eyebrow accent"><span class="eyebrow-line"></span> DÉVELOPPEMENT & SOLUTIONS NUMÉRIQUES</p>
-          <h1>Vos ambitions méritent des <em>solutions sur mesure.</em></h1>
-          <p class="hero-lead">Applications métiers, tableaux de bord, automatisation et intégration : JALAURIS conçoit des outils informatiques adaptés à vos enjeux et à votre organisation.</p>
-          <div class="hero-actions"><a class="button button-accent" href="#contact">Parlons de votre projet <span aria-hidden="true">↗</span></a><a class="button button-outline" href="#expertises">Découvrir nos solutions <span aria-hidden="true">↓</span></a></div>
-          <div class="hero-proof"><span class="proof-dot"></span> Une approche métier, une réalisation technique maîtrisée</div>
-        </div>
-        <div class="hero-visual" aria-label="Illustration d'un tableau de bord de pilotage d'activité">
-          <div class="visual-glow"></div>
-          <div class="mock-panel">
-            <div class="mock-top"><div class="mock-logo"><i></i> Vue d'ensemble</div><div class="mock-pills"><span></span><span></span><span></span></div></div>
-            <div class="mock-label">PILOTAGE DE L'ACTIVITÉ</div>
-            <div class="mock-heading">Vos données. Une vision claire.</div>
-            <div class="metric-row"><div class="metric"><small>ACTIVITÉ</small><strong>+18,4 %</strong><span>↗ Évolution positive</span></div><div class="metric"><small>OBJECTIFS</small><strong>86 %</strong><span>Progression annuelle</span></div><div class="metric"><small>AUTOMATISATIONS</small><strong>12</strong><span>Processus suivis</span></div></div>
-            <div class="mock-chart"><div class="chart-head"><span>Évolution de l'activité</span><span>12 derniers mois</span></div><svg viewBox="0 0 440 154" preserveAspectRatio="none" role="img" aria-label="Courbe de progression illustrative"><defs><linearGradient id="fillCurve" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#57a4db" stop-opacity=".36"/><stop offset="1" stop-color="#57a4db" stop-opacity="0"/></linearGradient></defs><path d="M0 38H440M0 75H440M0 112H440" stroke="#263e59" stroke-width="1"/><path d="M0 123C35 119 50 92 85 103S138 108 166 82 208 94 244 69 292 84 320 48 378 62 440 17V154H0Z" fill="url(#fillCurve)"/><path d="M0 123C35 119 50 92 85 103S138 108 166 82 208 94 244 69 292 84 320 48 378 62 440 17" fill="none" stroke="#65b5ed" stroke-width="3" stroke-linecap="round"/></svg><div class="axis"><span>JAN</span><span>MAR</span><span>MAI</span><span>JUIL</span><span>SEPT</span><span>NOV</span></div></div>
-          </div>
-          <div class="float-card"><span class="check">✓</span><span>Processus synchronisés<small>Illustration conceptuelle</small></span></div>
-        </div>
+    <section class="intro" aria-labelledby="titre-accueil">
+      <div class="container intro-inner">
+        <p class="eyebrow">JALAURIS SOLUTIONS</p>
+        <h1 id="titre-accueil">L'informatique et le conseil <span>au service de votre entreprise.</span></h1>
+        <p class="intro-lead">JALAURIS accompagne les professionnels dans leurs projets numériques et leurs enjeux de gestion. Nous proposons une approche pragmatique, des solutions adaptées à chaque organisation et un interlocuteur attentif à vos besoins.</p>
+        <a class="text-action" href="#activites">Découvrir nos activités <span aria-hidden="true">↓</span></a>
       </div>
-      <div class="container hero-bottom"><span>CONCEVOIR</span><i></i><span>DÉVELOPPER</span><i></i><span>AUTOMATISER</span><i></i><span>ACCOMPAGNER</span></div>
     </section>
-    <section class="section section-services" id="expertises"><div class="container">
-      <div class="section-heading"><div><p class="eyebrow">NOS EXPERTISES</p><h2>La technologie au service <br />de <span>votre activité.</span></h2></div><p>Chaque entreprise a ses particularités. Nous imaginons des solutions qui répondent à vos besoins réels, sans complexité superflue.</p></div>
-      <div class="service-grid">
-        <article class="service-card"><div class="service-icon" aria-hidden="true">⌘</div><span class="service-num">01</span><h3>Applications métiers</h3><p>Outils internes, plateformes web et applications personnalisées pour simplifier vos opérations.</p><span class="service-tag">Développement sur mesure</span></article>
-        <article class="service-card"><div class="service-icon" aria-hidden="true">▥</div><span class="service-num">02</span><h3>Tableaux de bord</h3><p>Centralisez vos informations et suivez vos indicateurs pour piloter votre activité avec clarté.</p><span class="service-tag">Données & pilotage</span></article>
-        <article class="service-card"><div class="service-icon" aria-hidden="true">↗</div><span class="service-num">03</span><h3>Automatisation & intégration</h3><p>Connectez vos outils, fluidifiez les échanges de données et réduisez les tâches répétitives.</p><span class="service-tag">Processus & intégrations</span></article>
-        <article class="service-card"><div class="service-icon" aria-hidden="true">◇</div><span class="service-num">04</span><h3>Qualité & maintenance</h3><p>Tests, corrections, maintenance et évolutions pour des solutions fiables dans la durée.</p><span class="service-tag">Accompagnement continu</span></article>
+    <section class="activities section" id="activites" aria-labelledby="titre-activites">
+      <div class="container">
+        <div class="section-intro">
+          <p class="eyebrow">NOS ACTIVITÉS</p>
+          <h2 id="titre-activites">Quatre domaines d'intervention.</h2>
+          <p>Des prestations complémentaires pour accompagner les entreprises, de la réflexion à la mise en œuvre.</p>
+        </div>
+        <div class="activity-grid">
+          <article class="activity-card">
+            <div class="card-heading"><span class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m10 9-3 3 3 3m4-6 3 3-3 3"/></svg></span><span class="card-index">01</span></div>
+            <h3>Conception de logiciels sur mesure</h3>
+            <p>Applications métiers, outils de gestion, tableaux de bord et plateformes web conçus pour répondre aux besoins spécifiques de votre activité.</p>
+          </article>
+          <article class="activity-card">
+            <div class="card-heading"><span class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8m-4-4v4m-5-11h3m4 0h3"/></svg></span><span class="card-index">02</span></div>
+            <h3>Prestations informatiques</h3>
+            <p>Développement, intégration de services, automatisation des processus, tests et accompagnement dans l'évolution de vos outils numériques.</p>
+          </article>
+          <article class="activity-card">
+            <div class="card-heading"><span class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 20V5m0 15h16M7 15l4-4 3 2 5-6"/><path d="M15 7h4v4"/></svg></span><span class="card-index">03</span></div>
+            <h3>Conseil en gestion</h3>
+            <p>Accompagnement dans l'organisation, l'amélioration des processus, le suivi d'activité et la mise en place d'outils de pilotage.</p>
+          </article>
+          <article class="activity-card">
+            <div class="card-heading"><span class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m12 2 9 5-9 5-9-5 9-5Zm-9 5v10l9 5 9-5V7M12 12v10"/></svg></span><span class="card-index">04</span></div>
+            <h3>Vente de logiciels</h3>
+            <p>Solutions logicielles et outils numériques proposés sous licence ou abonnement pour simplifier la gestion et les opérations du quotidien.</p>
+          </article>
+        </div>
       </div>
-    </div></section>
-    <section class="section method" id="methode"><div class="container method-layout"><div><p class="eyebrow">NOTRE APPROCHE</p><h2>Votre métier d'abord.<br /><span>La technologie ensuite.</span></h2><p class="method-intro">Un bon logiciel ne commence pas par une ligne de code. Il commence par une compréhension précise de ce que vous faites et de ce que vous souhaitez améliorer.</p><a class="text-link" href="#contact">Échanger sur vos besoins <span aria-hidden="true">↗</span></a></div><ol class="steps"><li><span>01</span><div><h3>Comprendre</h3><p>Analyser les usages, les contraintes et les objectifs.</p></div></li><li><span>02</span><div><h3>Concevoir</h3><p>Définir le périmètre et proposer une solution adaptée.</p></div></li><li><span>03</span><div><h3>Réaliser & tester</h3><p>Développer, vérifier et valider les fonctionnalités.</p></div></li><li><span>04</span><div><h3>Déployer & faire évoluer</h3><p>Accompagner la mise en service et les évolutions.</p></div></li></ol></div></section>
-    <section class="section projects" id="realisations"><div class="container"><div class="section-heading"><div><p class="eyebrow">PROJETS & SAVOIR-FAIRE</p><h2>Des usages concrets.<br /><span>Des outils utiles.</span></h2></div><p>Quelques projets de démonstration et réalisations internes illustrant notre approche. Ils ne constituent pas des références clients.</p></div><div class="project-grid"><article class="project-card"><div class="project-art art-dashboard"><span>DONNÉES · PILOTAGE</span><div class="art-bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div><div class="project-body"><small>PROJET INTERNE</small><h3>Plateforme de pilotage d'activité</h3><p>Consolidation de données, indicateurs, suivi opérationnel et gestion documentaire.</p></div></article><article class="project-card"><div class="project-art art-queue"><span>APPLICATION WEB · FLUX</span><div class="queue-lines"><div><b>01</b><i></i><em>✓</em></div><div><b>02</b><i></i><em>→</em></div><div><b>03</b><i></i><em>·</em></div></div></div><div class="project-body"><small>PROJET ASSOCIATIF</small><h3>Gestion numérique de file d'attente</h3><p>Parcours utilisateur, interface de gestion et suivi des inscriptions en temps réel.</p></div></article></div></div></section>
-    <section class="section about" id="apropos"><div class="container about-layout"><div class="about-mark"><span class="about-monogram">J</span><small>EXPÉRIENCE TERRAIN<br />& EXPERTISE NUMÉRIQUE</small></div><div><p class="eyebrow accent">À PROPOS DE JALAURIS</p><h2>Une culture d'entrepreneur.<br /><span>Une vision du numérique.</span></h2><p>Fondée par un entrepreneur issu de la gestion et du développement d'entreprises, JALAURIS conjugue une expérience opérationnelle du terrain avec des compétences en développement informatique et qualité logicielle.</p><p>Notre conviction : la technologie doit s'adapter à l'organisation, et non l'inverse.</p><a class="button button-accent" href="#contact">Faire connaissance <span aria-hidden="true">↗</span></a></div></div></section>
-    <section class="section contact" id="contact"><div class="container contact-layout"><div><p class="eyebrow">VOTRE PROJET</p><h2>Imaginons ensemble <span>la suite.</span></h2><p>Vous envisagez une application, une automatisation ou l'évolution d'un outil existant ? Décrivez-nous votre besoin pour engager un premier échange.</p><div class="contact-note">Réponse personnalisée · Étude du besoin · Proposition adaptée</div></div><form id="contact-form" class="contact-form"><div class="field-row"><label>Votre nom <span>*</span><input name="nom" required maxlength="100" autocomplete="name" placeholder="Nom et prénom" /></label><label>Entreprise<input name="entreprise" maxlength="120" autocomplete="organization" placeholder="Nom de votre structure" /></label></div><label>Adresse e-mail professionnelle <span>*</span><input name="email" type="email" required maxlength="200" autocomplete="email" placeholder="vous@entreprise.fr" /></label><label>Nature du besoin<select name="besoin"><option>Application métier</option><option>Tableau de bord</option><option>Automatisation / intégration</option><option>Maintenance / qualité</option><option>Autre projet</option></select></label><label>Votre message <span>*</span><textarea name="message" rows="5" required maxlength="4000" placeholder="Décrivez votre projet, vos objectifs et les difficultés à résoudre..."></textarea></label><button class="button button-dark" type="submit">Préparer mon message <span aria-hidden="true">↗</span></button><p class="form-helper" id="form-helper">Ce formulaire ouvre votre messagerie avec un message prérempli. Aucun renseignement n'est envoyé ou enregistré par le site.</p></form></div></section>
+    </section>
+    <section class="company section" id="societe" aria-labelledby="titre-societe">
+      <div class="container company-inner">
+        <div>
+          <p class="eyebrow">LA SOCIÉTÉ</p>
+          <h2 id="titre-societe">Une expérience de l'entreprise, une approche concrète du numérique.</h2>
+        </div>
+        <div class="company-copy">
+          <p>JALAURIS s'appuie sur une expérience de direction d'entreprise associée à des compétences en développement informatique et qualité logicielle.</p>
+          <p>Notre priorité : comprendre vos enjeux pour proposer des solutions utiles, cohérentes et adaptées à votre fonctionnement.</p>
+        </div>
+      </div>
+    </section>
+    <section class="contact section" id="contact" aria-labelledby="titre-contact">
+      <div class="container contact-inner">
+        <div>
+          <p class="eyebrow">PRENONS CONTACT</p>
+          <h2 id="titre-contact">Parlons de votre projet.</h2>
+          <p>Vous avez un besoin informatique ou une question sur nos prestations ? Présentez-nous votre projet pour engager un premier échange.</p>
+        </div>
+        <form class="contact-form" id="contact-form">
+          <div class="form-grid">
+            <label>Nom et prénom <span>*</span><input name="nom" autocomplete="name" maxlength="100" required placeholder="Votre nom"></label>
+            <label>Entreprise<input name="entreprise" autocomplete="organization" maxlength="120" placeholder="Votre société"></label>
+          </div>
+          <label>Adresse e-mail <span>*</span><input name="email" type="email" autocomplete="email" maxlength="200" required placeholder="vous@entreprise.fr"></label>
+          <label>Votre besoin<select name="besoin"><option>Conception de logiciel sur mesure</option><option>Prestations informatiques</option><option>Conseil en gestion</option><option>Vente de logiciels</option><option>Autre demande</option></select></label>
+          <label>Votre message <span>*</span><textarea name="message" rows="4" maxlength="4000" required placeholder="Parlez-nous de votre projet..."></textarea></label>
+          <button class="button-primary" type="submit">Préparer mon message <span aria-hidden="true">↗</span></button>
+          <p class="form-note" id="form-helper">La messagerie s'ouvrira avec un message prérempli après configuration de l'adresse de contact. Aucun renseignement n'est enregistré sur ce site.</p>
+        </form>
+      </div>
+    </section>
   </main>
-  <footer class="footer"><div class="container footer-main"><div><a class="brand" href="#haut"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19 5H45L60 32L45 59H19L4 32L19 5Z" stroke="currentColor" stroke-width="3.4" stroke-linejoin="round"/><path d="M38 18V42c0 9-6 13-14 13-6 0-10-3-13-8" stroke="#fff" stroke-width="5.5" stroke-linecap="round"/><path d="M23 18H43" stroke="#fff" stroke-width="5.5" stroke-linecap="round"/></svg></span><span class="brand-copy"><strong>JALAURIS</strong><small>SOLUTIONS</small></span></a><p>Des solutions informatiques pensées pour votre activité.</p></div><div><h3>Explorer</h3><a href="#expertises">Expertises</a><a href="#methode">Notre approche</a><a href="#realisations">Réalisations</a><a href="#apropos">À propos</a></div><div><h3>Échanger</h3><a href="#contact">Présenter un projet</a><p>Interventions à distance selon les besoins du projet.</p></div></div><div class="container footer-end"><span>© <span id="year"></span> JALAURIS. Tous droits réservés.</span><span>Mentions légales et politique de confidentialité : à compléter avant publication.</span></div></footer>
-  <script src="script.js"></script>
-</body></html>
+  <footer class="footer">
+    <div class="container footer-main">
+      <div><strong>JALAURIS <span>SOLUTIONS</span></strong><p>Solutions informatiques et conseil aux entreprises.</p></div>
+      <nav aria-label="Liens de pied de page"><a href="#activites">Nos activités</a><a href="#societe">La société</a><a href="#contact">Contact</a></nav>
+    </div>
+    <div class="container footer-bottom"><span>© <span id="year"></span> JALAURIS. Tous droits réservés.</span><span>Mentions légales et confidentialité : informations à compléter.</span></div>
+  </footer>
+</body>
+</html>
