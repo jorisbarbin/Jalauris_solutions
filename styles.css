@@ -101,3 +101,6 @@ input,select,textarea{width:100%;min-width:0;border:1px solid #cfdee8;background
 .privacy-content{max-width:900px}.privacy-content h2{font-size:22px;margin:32px 0 13px}.privacy-content h2:first-child{margin-top:0}
 .privacy-content p,.privacy-content li{font-size:15px;line-height:1.85;color:var(--muted)}.privacy-content ul{padding-left:22px}.privacy-content li{padding-bottom:9px}
 @media(max-width:700px){.privacy-hero{padding:35px 0 55px}.privacy-back{margin-bottom:36px}.privacy-content h2{font-size:20px}}
+
+/* Informations juridiques à finaliser. */
+.legal-pending{border-left:4px solid #176594;padding:16px 20px;background:#eef6fb}

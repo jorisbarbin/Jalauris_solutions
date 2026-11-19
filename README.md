@@ -1,17 +1,20 @@
-# JALAURIS — Site vitrine (prototype V1)
+# JALAURIS Solutions
 
-Page d'accueil responsive sans framework ni backend, déployable en statique sur Vercel, Netlify ou un hébergement classique.
+Site vitrine statique, avec formulaire serveur Vercel (`api/contact.js`), protection Cloudflare Turnstile et envoi Resend. Branche de référence : `main`.
 
-## Démarrage
+Pour prévisualiser les pages : `python3 -m http.server 8000`. Ce serveur local ne fait pas fonctionner les routes Vercel du formulaire.
 
-Ouvrir `index.html` dans un navigateur ou servir le dossier localement avec `python3 -m http.server 8000`.
+## Informations légales et confidentialité
 
-## Avant publication
+- `mentions-legales.html` : page distincte, identité confirmée par le propriétaire et données recoupées avec l’Annuaire des Entreprises. Restent à compléter : RCS/greffe, gérant, direction de publication, téléphone de l’entreprise et de Vercel, rédaction si applicable. Aucun nom de dirigeant ou greffe n’a été déduit du compte GitHub ou de l’adresse.
+- `politique-confidentialite.html` : politique RGPD séparée, conservation de 12 mois après le dernier échange des demandes sans suite, distinction des copies prestataires. L’automatisation de suppression n’est pas active.
+- `docs/conservation-contact.md` : étude, préparation Gandi, règles, limites, sources et conditions de mise en service.
+- `scripts/contact_retention_audit.py` : audit IMAP strictement en lecture seule ; aucun effacement ou déplacement.
 
-1. Remplacer `CONTACT_EMAIL_A_CONFIGURER` dans `script.js` par l'adresse professionnelle de réception. Le formulaire ouvre l'application mail du visiteur ; ce n'est pas un envoi direct.
-2. Rédiger les mentions légales (raison sociale, statut, SIREN, siège, directeur de publication, hébergeur) et la politique de confidentialité réelle selon les services utilisés.
-3. Valider les textes, la dénomination commerciale JALAURIS et les projets cités.
-4. Ajouter domaine, favicon définitif, balises sociales et éventuellement une solution de formulaire sécurisée.
-5. Remplacer les illustrations conceptuelles par des captures autorisées et anonymisées si souhaité.
+Les champs à compléter signifient que les mentions légales ne sont pas encore finalisées. Vérifier les obligations supplémentaires si l’activité évolue (vente aux consommateurs, activité réglementée, etc.).
 
-Les données et graphiques de la grande illustration sont fictifs et servent uniquement à illustrer l'interface.
+## Vérification
+
+`python3 -m unittest discover -s tests -v`
+
+Les tests utilisent des données fictives, sans accès à la messagerie réelle. Ne pas stocker de secrets ou de rapports de messagerie dans le dépôt ou dans les fichiers publics du site.
