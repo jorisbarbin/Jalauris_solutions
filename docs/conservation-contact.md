@@ -1,10 +1,10 @@
 # Conservation des contacts — état au 19 novembre 2026
 
-## État vérifié et activation restante
+## État vérifié et activation
 
 Le propriétaire a testé l’audit sur la boîte Gandi `solution@jalauris.fr` : connexion réussie, quatre messages examinés, dossier `Demandes sans suite` et dossier envoyé `Sent` confirmés. Il a confirmé que tous les échanges professionnels concernés sont conservés dans cette boîte. Le courriel de bienvenue Gandi sans Message-ID bénéficie d’une exception administrative strictement limitée (voir ci-dessous).
 
-Le programme de suppression ciblée est livré, avec tests sur une messagerie simulée. **La suppression réelle n’est pas encore activée.** La tâche Codex « Conservation des contacts JALAURIS », identifiant `conservation-des-contacts-jalauris`, est créée à 9 h chaque jour (Europe/Paris), en pause jusqu’au test réel et à la configuration locale. Les mots de passe n’ont pas été communiqués à l’assistant.
+Le test réel des deux messages fictifs a réussi chez Gandi. Le secret est enregistré dans le Trousseau macOS. **La tâche quotidienne est active**, à 9 h chaque jour (Europe/Paris), sous l’identifiant `conservation-des-contacts-jalauris`. Une première exécution effective a réussi le 19 novembre 2026 : 4 messages examinés, 0 éligible, 0 suppression et 0 conversation échue bloquée. La disponibilité quotidienne du Mac, de l’application, du réseau et du Trousseau reste nécessaire. Le mot de passe n’a pas été communiqué dans le chat ni affiché par le programme.
 
 ## Organisation de la boîte
 
@@ -33,7 +33,7 @@ La commande :
 5. Enregistre le secret dans le Trousseau macOS sous le service `fr.jalauris.retention.imap`, compte `solution@jalauris.fr`, puis vérifie l’accès sans invite interactive. Aucun secret dans Git, les arguments de commande, les rapports ou les fichiers publics.
 6. Enregistre une configuration locale validée. Elle affiche `ready: true` et `live_self_test: passed` uniquement après succès de toutes ces étapes.
 
-Après ce succès, activer la tâche Codex préparée et vérifier une première exécution. Le Mac doit être allumé, en ligne, le Trousseau accessible et l’application ouverte. Les permissions locales et réseau restent applicables ; une tâche bloquée n’est pas une tâche exécutée. Ne pas annoncer une purge quotidienne autonome avant cette vérification.
+Lors d’une première mise en service, activer ensuite la tâche Codex et vérifier une exécution. Ces deux étapes ont été effectuées le 19 novembre 2026. Le Mac doit être allumé, en ligne, le Trousseau accessible et l’application ouverte. Les permissions locales et réseau restent applicables ; une tâche bloquée n’est pas une tâche exécutée. Ne pas annoncer une purge quotidienne autonome avant cette vérification.
 
 ## Commandes utiles
 
