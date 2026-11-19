@@ -7,6 +7,7 @@ from email import policy
 from email.parser import BytesParser
 from email.utils import getaddresses, parsedate_to_datetime
 import getpass
+import hashlib
 import imaplib
 import json
 import os
@@ -43,7 +44,7 @@ def is_reviewed_welcome(folder, validity, uid, message):
         values = [v.strip() for k, v in message.raw_items() if k.lower() == header.lower()]
         if values != [value]:
             return False
-    return not any(message.get_all(h) for h in ('Message-ID', 'References', 'In-Reply-To', 'Cc', 'Reply-To'))
+    return not any(message.get_all(h) for h in ('Message-ID', 'References', 'In-Reply-To', 'Cc', 'Bcc', 'Reply-To'))
 
 
 def parse_message(folder, validity, uid, metadata, raw, own):
@@ -75,12 +76,27 @@ def parse_message(folder, validity, uid, metadata, raw, own):
     issues = []
     if len(message_ids) != 1 or not re.fullmatch(r'<[^<>\s]+>', str(message_ids[0]).strip()):
         issues.append('message_id_absent_ou_ambigu')
-    addresses = {a.casefold() for _, a in getaddresses([str(message.get(h, '')) for h in ('From', 'To', 'Cc', 'Reply-To')]) if '@' in a}
+    for name in ('References', 'In-Reply-To'):
+        for header in message.get_all(name, []):
+            if re.sub(r'<[^<>\s]+>', '', str(header)).strip():
+                issues.append('references_ambigues')
+    addresses = set()
+    for name in ('From', 'To', 'Cc', 'Bcc', 'Reply-To'):
+        for header in message.get_all(name, []):
+            parsed_addresses = getaddresses([str(header)])
+            if getattr(header, 'defects', ()) or not parsed_addresses or any('@' not in address for _, address in parsed_addresses):
+                issues.append('en_tete_adresse_ambigu')
+            addresses.update(address.casefold() for _, address in parsed_addresses if '@' in address)
+    if not message.get_all('From'):
+        issues.append('expediteur_absent')
     return {'folder': folder, 'uidvalidity': validity, 'uid': uid, 'issues': issues,
             'reviewed_non_contact': is_reviewed_welcome(folder, validity, uid, message),
             'date': max(d.astimezone(UTC) for d in dates),
             'keys': {'id:'+i for i in ids} | {'address:'+a for a in addresses-own},
-            'external': bool(addresses-own)}
+            'external': bool(addresses-own),
+            'fingerprint': hashlib.sha256(raw).hexdigest(),
+            'flags': sorted(f.decode('ascii') for f in imaplib.ParseFlags(metadata) if f.lower() != b'\\recent'),
+            'modseq': int(re.search(rb'MODSEQ \((\d+)\)', metadata)[1]) if re.search(rb'MODSEQ \((\d+)\)', metadata) else None}
 
 
 def review(messages, candidate, sent, now):
@@ -148,7 +164,7 @@ def folders_from_list(lines):
     return folders
 
 
-def scan(client, candidate, sent, own, limit):
+def scan(client, candidate, sent, own, limit, strict=False):
     folders = folders_from_list(checked(client.list('""', '*')))
     if candidate not in folders or not sent or not sent <= set(folders) or candidate in sent:
         raise AuditError('Dossiers sans suite / envoyés à vérifier')
@@ -163,7 +179,8 @@ def scan(client, candidate, sent, own, limit):
         if len(messages) + len(uids) > limit:
             raise AuditError('Limite de volume dépassée : audit interrompu')
         for uid in uids:
-            data = checked(client.uid('FETCH', uid, '(UID INTERNALDATE BODY.PEEK[HEADER.FIELDS (DATE MESSAGE-ID REFERENCES IN-REPLY-TO FROM TO CC REPLY-TO SUBJECT)])'))
+            fields = '(UID INTERNALDATE ' + ('FLAGS MODSEQ ' if strict else '') + 'BODY.PEEK[HEADER.FIELDS (DATE MESSAGE-ID REFERENCES IN-REPLY-TO FROM TO CC BCC REPLY-TO SUBJECT)])'
+            data = checked(client.uid('FETCH', uid, fields))
             payloads = [v for v in data if isinstance(v, tuple)]
             if len(payloads) != 1:
                 raise AuditError('Message disparu ou lecture ambiguë')
@@ -171,7 +188,10 @@ def scan(client, candidate, sent, own, limit):
             actual = re.search(rb'\bUID (\d+)\b', metadata)
             if not actual or actual[1] != uid:
                 raise AuditError('UID incohérent')
-            messages.append(parse_message(folder, validity[0].decode(), uid.decode(), metadata, raw, own))
+            parsed = parse_message(folder, validity[0].decode(), uid.decode(), metadata, raw, own)
+            if strict and (parsed['modseq'] is None or not re.search(rb'FLAGS \([^)]*\)', metadata)):
+                raise AuditError('Suivi des modifications IMAP indisponible')
+            messages.append(parsed)
         # Detect changes during a folder scan. The report remains a non-atomic snapshot.
         if checked(client.uid('SEARCH', None, 'ALL'))[0].split() != uids:
             raise AuditError('Dossier modifié pendant la lecture : relancer')

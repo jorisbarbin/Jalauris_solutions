@@ -1,83 +1,107 @@
-# Conservation des demandes de contact — 19 novembre 2026
+# Conservation des contacts — état au 19 novembre 2026
 
-## État réel
+## État vérifié et activation restante
 
-L’envoi du formulaire passe par Resend vers solution@jalauris.fr, hébergée chez Gandi (confirmation du propriétaire). Le site n’enregistre pas les demandes dans une base dédiée. L’accès IMAP n’a pas été vérifié et aucun identifiant n’a été fourni. **Aucune suppression, aucun déplacement et aucune tâche planifiée ne sont activés.** Un audit IMAP en lecture seule est livré et testé avec des données fictives ; il n’a pas été exécuté sur la boîte réelle.
+Le propriétaire a testé l’audit sur la boîte Gandi `solution@jalauris.fr` : connexion réussie, quatre messages examinés, dossier `Demandes sans suite` et dossier envoyé `Sent` confirmés. Il a confirmé que tous les échanges professionnels concernés sont conservés dans cette boîte. Le courriel de bienvenue Gandi sans Message-ID bénéficie d’une exception administrative strictement limitée (voir ci-dessous).
 
-## Règles retenues
+Le programme de suppression ciblée est livré, avec tests sur une messagerie simulée. **La suppression réelle n’est pas encore activée.** La tâche Codex « Conservation des contacts JALAURIS », identifiant `conservation-des-contacts-jalauris`, est créée à 9 h chaque jour (Europe/Paris), en pause jusqu’au test réel et à la configuration locale. Les mots de passe n’ont pas été communiqués à l’assistant.
 
-- Demandes classées sans suite : échéance à 12 mois calendaires après le dernier échange entrant OU sortant. Le délai n’est pas calculé depuis le seul premier formulaire.
-- Clients, devis encore actifs, litiges, obligations légales et besoins de preuve documentés : hors purge générale. Prévoir une durée spécifique et une révision de l’exception ; ne pas les conserver indéfiniment par défaut.
-- La prospection éventuelle obéit à ses propres règles ; le repère CNIL de trois ans depuis le dernier contact venant du prospect n’est ni une permission de prospecter, ni une raison d’allonger automatiquement les demandes sans suite.
-- Le classement « sans suite » est une décision humaine, jamais un filtre sur le seul sujet `[JALAURIS]` ou l’expéditeur `contact@jalauris.fr` (commun à tous les formulaires).
+## Organisation de la boîte
 
-Les 12 mois sont une politique de JALAURIS proportionnée à sa finalité, non une durée universelle imposée par la CNIL. Dans l’attente de l’automatisation, examiner les échéances au moins chaque semaine et traiter les demandes échues ; une exécution quotidienne future réduira le dépassement technique à environ un jour, hors panne. Ne pas prétendre garantir exactement 12 mois avec une purge mensuelle.
+- Classer manuellement dans `Demandes sans suite` les conversations closes, sans contrat, sans litige ni obligation particulière de conservation.
+- Y déplacer aussi leurs réponses et copies lorsque leur classement « sans suite » est vérifié. Le programme ne supprime **jamais** dans `Sent`, `INBOX`, les archives, la corbeille ou un autre dossier. Toute copie liée qui y reste bloque le nettoyage de la conversation, même si elle est ancienne. Ne pas déplacer des documents nécessaires à un client pour débloquer le programme.
+- Les messages marqués d’une étoile/drapeau (`Flagged`), brouillons (`Draft`) ou déjà marqués pour suppression (`Deleted`) sont protégés.
+- Retirer du dossier sans suite toute demande réactivée ou à conserver. Conserver tous les nouveaux échanges dans Gandi ; une autre adresse ou un contact téléphonique non documenté ne peut pas être découvert par IMAP.
+- Les exceptions clients, pièces comptables, contrats et litiges ont leurs durées propres et doivent être revues. Elles ne justifient pas de conserver indéfiniment toutes les données.
 
-## Préparation Gandi
+La durée est de 12 mois calendaires après le dernier échange entrant **ou sortant**, en retenant aussi la date serveur si elle est plus récente. Les relances de prospection ne réinitialisent pas pour autant le délai CNIL spécifique à la prospection : ce traitement relève d’une finalité et de règles distinctes.
 
-1. Vérifier l’activation IMAP dans les paramètres Gandi ; serveur `mail.gandi.net`, port `993`, TLS avec validation du certificat, identifiant complet `solution@jalauris.fr`.
-2. Identifier tous les dossiers réels : réception, envoyés de chaque logiciel/appareil, archives, clients, devis, corbeille, indésirables, sous-dossiers. Vérifier les messages envoyés conservés uniquement en local, les autres boîtes et les transferts.
-3. Créer manuellement un dossier dédié, par exemple `Demandes sans suite`, et y classer uniquement les demandes closes sans obligation de conservation. Les réponses peuvent rester dans les dossiers envoyés examinés par l’audit.
-4. Documenter les alias d’envoi JALAURIS. Ne jamais communiquer le mot de passe dans un chat, un commit ou un argument de commande. Le script le demande sans l’afficher, ou accepte `JALAURIS_IMAP_PASSWORD` injecté par un gestionnaire de secrets.
+## Une commande pour configurer sur ce Mac
 
-## Audit livré (Python 3.10+)
-
-Depuis la racine du dépôt, après vérification des noms IMAP exacts :
+Depuis la racine du dépôt :
 
 ```sh
+python3 scripts/contact_retention_cleanup.py configure
+```
+
+La commande :
+
+1. Désactive d’abord toute configuration antérieure. Demande le mot de passe sans l’afficher, puis vérifie Gandi avec TLS et certificat validé (`mail.gandi.net:993`).
+2. Exige les capacités UIDPLUS, CONDSTORE et ENABLE. Vérifie tous les dossiers et leur suivi des modifications.
+3. Crée un dossier temporaire unique `JALAURIS-retention-test-…`, y dépose deux courriels fictifs **sans aucun envoi SMTP**, supprime le premier par UID et vérifie que le second, pourtant déjà marqué pour suppression, est conservé. Elle supprime ensuite uniquement ce second courriel de test et le dossier devenu vide. En cas d’échec, la configuration reste désactivée ; un dossier temporaire peut rester à examiner.
+4. Réalise une simulation sur les messages réels, sans les supprimer.
+5. Enregistre le secret dans le Trousseau macOS sous le service `fr.jalauris.retention.imap`, compte `solution@jalauris.fr`, puis vérifie l’accès sans invite interactive. Aucun secret dans Git, les arguments de commande, les rapports ou les fichiers publics.
+6. Enregistre une configuration locale validée. Elle affiche `ready: true` et `live_self_test: passed` uniquement après succès de toutes ces étapes.
+
+Après ce succès, activer la tâche Codex préparée et vérifier une première exécution. Le Mac doit être allumé, en ligne, le Trousseau accessible et l’application ouverte. Les permissions locales et réseau restent applicables ; une tâche bloquée n’est pas une tâche exécutée. Ne pas annoncer une purge quotidienne autonome avant cette vérification.
+
+## Commandes utiles
+
+```sh
+# Simulation avec le mot de passe déjà dans le Trousseau : aucun effacement
+python3 scripts/contact_retention_cleanup.py simulate
+
+# Exécution effective selon toutes les protections, utilisée par la tâche quotidienne
+python3 scripts/contact_retention_cleanup.py run
+
+# État et dernier résultat, sans accès aux courriels
+python3 scripts/contact_retention_cleanup.py status
+
+# Arrêt immédiat des prochaines suppressions (secret conservé dans le Trousseau)
+python3 scripts/contact_retention_cleanup.py disable
+
+# Audit autonome historique, strictement en lecture seule
 python3 scripts/contact_retention_audit.py --candidate-folder 'Demandes sans suite' --sent-folder 'Sent'
 ```
 
-Pour identifier les noms techniques avant l’audit, sans lire les messages :
+Pour suspendre complètement les passages, mettre aussi la tâche Codex en pause. Pour reprendre après modification du programme, relancer la configuration : une empreinte des trois fichiers exécutables empêche l’utilisation automatique d’un code modifié sans nouvelle validation.
 
-```sh
-python3 scripts/contact_retention_audit.py --list-folders
-```
+## Protections de la suppression
 
-Ce mode affiche uniquement les noms de dossiers ; ils peuvent eux-mêmes contenir des noms de clients, à masquer avant partage. Le diagnostic distingue la connexion, l’authentification et la lecture, sans afficher les réponses brutes du serveur.
+- Inventaire de tous les dossiers sélectionnables, pas seulement les dossiers abonnés. Lecture des en-têtes avec BODY.PEEK ; pas de corps ni de pièces jointes. Identifiants, références et correspondants (dont Reply-To du formulaire et Bcc) rapprochent les conversations. Le rapprochement par adresse est conservateur : des demandes indépendantes peuvent être bloquées ensemble.
+- Deux inventaires complets identiques avant suppression ; comparaison des UIDVALIDITY, UIDNEXT, nombres de messages et HIGHESTMODSEQ de tous les dossiers. Toute lecture incomplète, date ambiguë, en-tête d’adresse ambigu, référence non interprétable ou volume supérieur à 10 000 messages arrête ou bloque le nettoyage.
+- Dossier cible lié à son UIDVALIDITY au moment de la configuration. Un dossier recréé n’est jamais accepté silencieusement. Message identifié par dossier, UIDVALIDITY, UID et empreinte des en-têtes.
+- Maximum 20 messages par passage. Au-delà, le lot entier est bloqué pour revue ; aucun élargissement automatique du périmètre.
+- Verrou local contre les exécutions simultanées. Journal préalable durable avant tout marquage.
+- Marquage conditionnel `UID STORE … (UNCHANGEDSINCE …) +FLAGS.SILENT (\Deleted)`. Si le serveur signale une modification concurrente, arrêt sans effacement.
+- Nouvel inventaire après marquage : seules les modifications attendues des messages cibles sont acceptées. Puis `UID EXPUNGE` sur les seuls UID validés. **Jamais de commande EXPUNGE globale, CLOSE, purge de corbeille ou effacement par sujet/expéditeur.**
+- Contrôle après effacement. Si une panne ou une réponse ambiguë survient, `pending.json` reste présent et interdit toutes les relances automatiques. Avant le début de l’effacement, une tentative de retrait du seul marquage ajouté par le programme est faite si la connexion fonctionne. Après une interruption, certains messages peuvent déjà avoir été effacés ou rester marqués : ne jamais prétendre le contraire.
 
-`Sent` est un exemple, pas un nom confirmé chez Gandi. Répéter `--sent-folder` pour tous les dossiers envoyés et `--own-address` pour les alias supplémentaires. Les noms internationaux doivent utiliser leur représentation IMAP modified UTF-7 ; un format non reconnu interrompt l’audit plutôt que d’omettre le dossier.
+IMAP ne fournit pas de transaction atomique sur plusieurs dossiers. Une petite fenêtre de concurrence subsiste entre la dernière vérification et l’effacement ; les contrôles réduisent ce risque sans l’annuler. Ne pas déplacer ni reclasser les conversations pendant une opération ; si ce risque résiduel n’est pas acceptable, garder la suppression manuelle ou adopter un suivi de dossiers transactionnel distinct.
 
-Le script énumère tous les dossiers sélectionnables (pas seulement les abonnements), ouvre en lecture seule et ne récupère que les en-têtes avec `BODY.PEEK`, sans marquer les messages comme lus. Il rapproche les identifiants `Message-ID`, `References`, `In-Reply-To` et les adresses externes, notamment `Reply-To` du formulaire. Le rapprochement par correspondant est volontairement conservateur : plusieurs demandes indépendantes peuvent être bloquées ensemble. Il retient la plus récente des dates de message et de serveur, puis celle de tous les échanges liés. Un message lié dans tout autre dossier que « sans suite » ou les dossiers envoyés bloque la proposition (y compris corbeille et archives).
+## État local, alertes et incidents
 
-Une date ou une lecture incomplète, un dossier absent, un changement détecté ou un volume supérieur à 10 000 messages arrêtent l’audit sans rapport partiel. Les en-têtes et adresses restent en mémoire. La sortie contient des compteurs, dates et références dossier/UID/UIDVALIDITY, jamais le corps, le sujet ou les adresses. Ces références restent des données à accès restreint. Si le rapport doit être enregistré, le stocker hors du dossier servi par Vercel, avec permissions limitées, et l’effacer après revue (au plus 30 jours).
+Les fichiers d’état sont dans `.jalauris-retention`, **dans le dossier parent du dépôt**, hors des fichiers servis par le site. Dossier accessible uniquement à l’utilisateur (0700), fichiers privés (0600). Les journaux ne contiennent ni sujet, ni adresse de correspondant, ni contenu de message. L’historique garde des compteurs sur 30 jours (100 résultats au maximum). Le journal d’opération en attente conserve les références et empreintes nécessaires à l’analyse, jusqu’à résolution manuelle.
 
-**Le rapport est un instantané indicatif, non atomique, jamais un manifeste de suppression.** Il ne voit pas les réponses hors IMAP, les échanges téléphoniques, les nouvelles adresses non reliées, les archives locales ni les données Resend. Les propositions `a_verifier_manuellement` doivent être contrôlées. Il n’existe pas d’option `--apply`.
+La tâche doit signaler les erreurs, les suppressions effectuées et les conversations échues mais bloquées (`overdue_blocked_groups`). Un message récent bloqué est normal. Une absence d’exécution parce que le Mac est éteint ne génère pas forcément une alerte : consulter les derniers passages dans Codex et `status` ; si une disponibilité continue est nécessaire, choisir ultérieurement un hôte permanent.
 
-Tests : `python3 -m unittest discover -s tests -v`.
+En présence de `pending.json` : désactiver les passages, examiner les UID ciblés, les éventuels marqueurs Deleted et l’état effectif du serveur. Ne pas supprimer le journal ni relancer pour « forcer ». La reprise nécessite une résolution humaine documentée. Aucun outil automatique d’effacement de ce journal n’est livré.
 
-## Mécanisme de suppression à réaliser après validation IMAP
+Une exécution quotidienne peut dépasser l’échéance de quelques heures et davantage en cas de panne ou de blocage. Elle ne garantit pas l’effacement exact à la seconde des 12 mois. Revoir manuellement les dossiers échus bloqués.
 
-Une automatisation fiable est techniquement envisageable, mais son volet destructif ne peut pas être validé sans la boîte et son organisation réelle. Conditions de mise en service :
+## Exception de bienvenue et dates
 
-1. Auditer la boîte réelle et un dossier de test avec réponses récentes, copies dans plusieurs dossiers, messages sans références, clients, changements d’UIDVALIDITY et erreurs réseau. Confirmer le suivi des échanges hors messagerie.
-2. Utiliser un registre privé de dossiers de contact : statut humain « clos sans suite », date du dernier échange, exceptions motivées avec échéance de révision, liste exacte des copies admissibles. Prévenir les faux rapprochements et les changements d’adresse.
-3. Faire une revue avant échéance (par exemple à 11 mois) et retirer immédiatement tout dossier réactivé du périmètre. Une quarantaine supplémentaire après 12 mois prolongerait la conservation : ne pas l’ajouter implicitement.
-4. Exécuter quotidiennement sur un hôte privé durable, avec secret protégé, verrou contre les exécutions simultanées, plafond par lot, alerte en cas d’échec et journal minimal sans contenu/adresses. Préférer ce service à une route HTTP publique de purge.
-5. Avant toute suppression, refaire un inventaire complet et vérifier dernier échange, statut, exclusions, UIDVALIDITY, UID et Message-ID. Arrêter tout le lot en cas de doute ou d’inventaire incomplet. Un rapport ancien ne suffit pas.
-6. Vérifier le support serveur d’UIDPLUS et de `UID EXPUNGE` ciblé sur les seuls UID approuvés. **Ne jamais utiliser `EXPUNGE` global**, qui supprimerait aussi d’autres messages déjà marqués. Sans cette capacité vérifiée, rester en procédure manuelle. Ne pas considérer un simple déplacement dans la corbeille comme un effacement définitif.
-7. Inclure explicitement les réponses et copies admissibles dans les dossiers envoyés, tout en préservant les pièces nécessaires aux clients, contrats et litiges. Recontrôler après opération, gérer les suppressions partielles et les relances de façon idempotente.
+Le propriétaire a fourni les en-têtes du message `[GANDI] Bienvenue`, daté du 16 novembre 2026 à 14:41:04 UTC, sans Message-ID. Seule la référence INBOX / UIDVALIDITY `1794840065` / UID `1`, avec les From, To, Subject et Date exacts et sans référence de conversation, Cc, Bcc ni Reply-To, est reconnue comme administrative. Son anomalie reste visible (`reviewed_non_contact: true`). Le message est conservé et ne fait jamais partie des cibles. Un déplacement ou une modification invalide l’exception. Tout autre Message-ID absent ou ambigu bloque l’ensemble des propositions.
 
-## Prestataires et copies hors périmètre
+Le fuseau explicite `-0000` signifie UTC sans indication du fuseau d’origine ; il est accepté. Un fuseau réellement absent ou inconnu reste bloquant. Les valeurs brutes sont examinées pour éviter qu’une normalisation de bibliothèque masque l’absence de fuseau.
 
-Une suppression IMAP ne supprime ni les copies Resend, ni les sauvegardes Gandi, ni les exports locaux ou les copies chez les destinataires. Vérifier séparément les durées contractuelles, sauvegardes et demandes d’effacement avec chaque prestataire. La documentation Resend consultée indique 30 jours pour e-mails et journaux des offres Free/Pro/Scale, des modalités spécifiques Enterprise et l’absence d’API de suppression d’un e-mail individuel. L’offre réellement souscrite reste à vérifier ; aucun effacement Resend n’est implémenté ou revendiqué ici.
+## Prestataires et limites
 
-## Sources officielles consultées le 19 novembre 2026
+Le formulaire utilise Resend pour envoyer vers Gandi. **La suppression IMAP ne supprime aucune copie Resend**, sauvegarde Gandi, export local ou copie chez un destinataire. Vérifier séparément les offres, contrats et délais de ces prestataires. La documentation Resend consultée annonce 30 jours pour e-mails et journaux Free/Pro/Scale, des modalités Enterprise spécifiques et aucune API d’effacement d’un e-mail individuel. L’offre souscrite reste à vérifier.
 
-- [CNIL — fixer la durée selon la finalité](https://www.cnil.fr/fr/cnil-direct/question/dois-je-fixer-une-duree-de-conservation-des-donnees-dans-mon-fichier)
-- [CNIL — référentiel activités commerciales et prospects](https://www.cnil.fr/fr/questions-reponses-sur-les-referentiels-relatifs-la-gestion-des-activites-commerciales-et-des)
+## Vérification et sources
+
+`python3 -m unittest discover -s tests -v`
+
+Les tests couvrent les réponses récentes, dossiers protégés, drapeaux, dates, identifiants, plafond, changement d’inventaire, conflit de marquage, panne, verrou, protection du journal, test temporaire, configuration désactivée et compatibilité de la commande conditionnelle avec imaplib. Les essais simulés ne remplacent pas le test réel effectué par `configure`.
+
+Sources consultées le 19 novembre 2026 :
+
+- [CNIL — durée selon la finalité](https://www.cnil.fr/fr/cnil-direct/question/dois-je-fixer-une-duree-de-conservation-des-donnees-dans-mon-fichier)
+- [CNIL — clients et prospects](https://www.cnil.fr/fr/questions-reponses-sur-les-referentiels-relatifs-la-gestion-des-activites-commerciales-et-des)
 - [Gandi — paramètres IMAP](https://docs.gandi.net/en/gandimail/standard_email_settings/)
-- [Python — imaplib, lecture seule et commandes UID](https://docs.python.org/3/library/imaplib.html)
+- [RFC 4315 — UID EXPUNGE ciblé](https://www.rfc-editor.org/rfc/rfc4315.html#section-2.1)
+- [RFC 7162 — CONDSTORE et modifications concurrentes](https://www.rfc-editor.org/rfc/rfc7162.html)
+- [Python — dates et fuseau -0000](https://docs.python.org/3/library/email.utils.html#email.utils.parsedate_to_datetime)
 - [Resend — rétention et effacement](https://resend.com/security/gdpr)
-
-### Lecture des dates UTC
-
-Le fuseau explicite `-0000` est interprété comme UTC conformément à la [documentation Python](https://docs.python.org/3/library/email.utils.html#email.utils.parsedate_to_datetime). Une date sans fuseau ou avec un fuseau inconnu continue de bloquer l’audit. La valeur brute de l’en-tête est examinée pour éviter une normalisation trompeuse.
-
-### Identifiants absents ou ambigus
-
-Un Message-ID absent, mal formé ou multiple n’interrompt plus la lecture et le message n’est jamais omis. Le rapport indique l’anomalie avec dossier/UID/UIDVALIDITY, sans contenu ni adresse. Comme les liens entre échanges peuvent être incomplets, toutes les demandes candidates sont bloquées pour vérification manuelle, même si le message anormal semble indépendant. Ce rapport de diagnostic ne constitue pas une liste de suppression. Ne pas supprimer un message uniquement pour faire disparaître l’anomalie.
-
-### Exception administrative vérifiée le 19 novembre 2026
-
-Les en-têtes fournis par le propriétaire identifient le message `[GANDI] Bienvenue` du 16 novembre 2026 à 14:41:04 UTC, sans Message-ID. L’audit autorise uniquement ce message à ne pas bloquer les autres demandes : INBOX, UIDVALIDITY `1794840065`, UID `1`, avec vérification exacte de From, To, Subject et Date, et absence de références de conversation, Cc et Reply-To. L’anomalie reste visible avec `reviewed_non_contact: true`. Le message reste lu dans l’inventaire et conservé, jamais proposé à suppression. Tout changement de dossier, de référence ou d’en-tête invalide cette exception ; les autres identifiants manquants restent bloquants. Le sujet est désormais lu en mémoire pour cette vérification, sans être inclus dans le rapport.
+- [OpenAI — tâches planifiées et exigences d’exécution locale](https://learn.chatgpt.com/docs/automations?surface=app)
