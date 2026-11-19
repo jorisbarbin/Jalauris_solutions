@@ -40,7 +40,7 @@ Ce mode affiche uniquement les noms de dossiers ; ils peuvent eux-mêmes conteni
 
 Le script énumère tous les dossiers sélectionnables (pas seulement les abonnements), ouvre en lecture seule et ne récupère que les en-têtes avec `BODY.PEEK`, sans marquer les messages comme lus. Il rapproche les identifiants `Message-ID`, `References`, `In-Reply-To` et les adresses externes, notamment `Reply-To` du formulaire. Le rapprochement par correspondant est volontairement conservateur : plusieurs demandes indépendantes peuvent être bloquées ensemble. Il retient la plus récente des dates de message et de serveur, puis celle de tous les échanges liés. Un message lié dans tout autre dossier que « sans suite » ou les dossiers envoyés bloque la proposition (y compris corbeille et archives).
 
-Une date, un identifiant ou une lecture incomplets, un dossier absent, un changement détecté ou un volume supérieur à 10 000 messages arrêtent l’audit sans rapport partiel. Les en-têtes et adresses restent en mémoire. La sortie contient des compteurs, dates et références dossier/UID/UIDVALIDITY, jamais le corps, le sujet ou les adresses. Ces références restent des données à accès restreint. Si le rapport doit être enregistré, le stocker hors du dossier servi par Vercel, avec permissions limitées, et l’effacer après revue (au plus 30 jours).
+Une date ou une lecture incomplète, un dossier absent, un changement détecté ou un volume supérieur à 10 000 messages arrêtent l’audit sans rapport partiel. Les en-têtes et adresses restent en mémoire. La sortie contient des compteurs, dates et références dossier/UID/UIDVALIDITY, jamais le corps, le sujet ou les adresses. Ces références restent des données à accès restreint. Si le rapport doit être enregistré, le stocker hors du dossier servi par Vercel, avec permissions limitées, et l’effacer après revue (au plus 30 jours).
 
 **Le rapport est un instantané indicatif, non atomique, jamais un manifeste de suppression.** Il ne voit pas les réponses hors IMAP, les échanges téléphoniques, les nouvelles adresses non reliées, les archives locales ni les données Resend. Les propositions `a_verifier_manuellement` doivent être contrôlées. Il n’existe pas d’option `--apply`.
 
@@ -73,3 +73,7 @@ Une suppression IMAP ne supprime ni les copies Resend, ni les sauvegardes Gandi,
 ### Lecture des dates UTC
 
 Le fuseau explicite `-0000` est interprété comme UTC conformément à la [documentation Python](https://docs.python.org/3/library/email.utils.html#email.utils.parsedate_to_datetime). Une date sans fuseau ou avec un fuseau inconnu continue de bloquer l’audit. La valeur brute de l’en-tête est examinée pour éviter une normalisation trompeuse.
+
+### Identifiants absents ou ambigus
+
+Un Message-ID absent, mal formé ou multiple n’interrompt plus la lecture et le message n’est jamais omis. Le rapport indique l’anomalie avec dossier/UID/UIDVALIDITY, sans contenu ni adresse. Comme les liens entre échanges peuvent être incomplets, toutes les demandes candidates sont bloquées pour vérification manuelle, même si le message anormal semble indépendant. Ce rapport de diagnostic ne constitue pas une liste de suppression. Ne pas supprimer un message uniquement pour faire disparaître l’anomalie.

@@ -60,6 +60,21 @@ class RetentionTests(unittest.TestCase):
         with self.assertRaisesRegex(AuditError, 'multiple'):
             parse_message('SansSuite', '42', '1', b'INTERNALDATE "19-Nov-2026 15:00:00 +0000"', raw, OWN)
 
+    def test_missing_id_reported_without_omitting_message(self):
+        raw = b'Date: Wed, 1 Jan 2025 00:00:00 +0000\r\nFrom: other@example.org\r\n\r\n'
+        m = parse_message('INBOX', '42', '9', b'INTERNALDATE "01-Jan-2025 00:00:00 +0000"', raw, OWN)
+        self.assertEqual(m['issues'], ['message_id_absent_ou_ambigu'])
+        result = self.evaluate([msg(), m])
+        self.assertEqual(result['status'], 'bloque')
+        self.assertIn('identifiants_incomplets_dans_la_boite_verification_manuelle_requise', result['reasons'])
+
+    def test_multiple_or_malformed_ids_block_all_candidates(self):
+        for header in (b'Message-ID: malformed\r\n', b'Message-ID: <a@b>\r\nMessage-ID: <c@d>\r\n'):
+            raw = b'Date: Wed, 1 Jan 2025 00:00:00 +0000\r\n' + header + b'From: other@example.org\r\n\r\n'
+            m = parse_message('Sent', '42', '9', b'INTERNALDATE "01-Jan-2025 00:00:00 +0000"', raw, OWN)
+            self.assertTrue(m['issues'])
+            self.assertEqual(self.evaluate([msg(), m])['status'], 'bloque')
+
     def test_list_parsing_and_abort(self):
         self.assertEqual(folders_from_list([b'(\\Noselect) "/" "Parent"', b'(\\Sent) "/" "Sent"']), ['Sent'])
         with self.assertRaises(ValueError):

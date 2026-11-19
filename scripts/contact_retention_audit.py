@@ -52,10 +52,12 @@ def parse_message(folder, validity, uid, metadata, raw, own):
             raise AuditError('Fuseau horaire du message absent ou non reconnu')
     dates = [server_date, mail_date]
     ids = set(re.findall(r'<[^<>\s]+>', ' '.join(str(message.get(h, '')) for h in ('Message-ID', 'References', 'In-Reply-To'))))
-    if not re.fullmatch(r'<[^<>\s]+>', str(message.get('Message-ID', '')).strip()):
-        raise AuditError('Message-ID absent ou ambigu')
+    message_ids = message.get_all('Message-ID', [])
+    issues = []
+    if len(message_ids) != 1 or not re.fullmatch(r'<[^<>\s]+>', str(message_ids[0]).strip()):
+        issues.append('message_id_absent_ou_ambigu')
     addresses = {a.casefold() for _, a in getaddresses([str(message.get(h, '')) for h in ('From', 'To', 'Cc', 'Reply-To')]) if '@' in a}
-    return {'folder': folder, 'uidvalidity': validity, 'uid': uid,
+    return {'folder': folder, 'uidvalidity': validity, 'uid': uid, 'issues': issues,
             'date': max(d.astimezone(UTC) for d in dates),
             'keys': {'id:'+i for i in ids} | {'address:'+a for a in addresses-own},
             'external': bool(addresses-own)}
@@ -84,6 +86,8 @@ def review(messages, candidate, sent, now):
             continue
         last = max(m['date'] for m in group)
         reasons = []
+        if any(m.get('issues') for m in messages):
+            reasons.append('identifiants_incomplets_dans_la_boite_verification_manuelle_requise')
         if any(m['folder'] not in {candidate, *sent} for m in group):
             reasons.append('echange_dans_un_autre_dossier')
         if any(not m['external'] for m in group):
@@ -189,6 +193,7 @@ def main():
     now = datetime.now(UTC)
     print(json.dumps({'mode': 'lecture_seule', 'deletion_enabled': False, 'generated_at': now.isoformat(),
                       'warning': 'Instantané indicatif, jamais une autorisation de suppression. Vérifier les échanges hors IMAP.',
+                      'anomalies': [{k: m[k] for k in ('folder', 'uidvalidity', 'uid', 'issues')} for m in messages if m.get('issues')],
                       'scanned_messages': len(messages), 'groups': review(messages, args.candidate_folder, set(args.sent_folder), now)}, ensure_ascii=False, indent=2))
 
 
