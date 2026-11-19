@@ -34,10 +34,23 @@ def parse_message(folder, validity, uid, metadata, raw, own):
     internal = re.search(rb'INTERNALDATE "([^"]+)"', metadata)
     if not internal:
         raise AuditError('Date serveur absente')
-    dates = [parsedate_to_datetime(internal[1].decode('ascii').replace('-', ' ', 2))]
-    dates.append(parsedate_to_datetime(str(message['Date'])))
-    if any(d.tzinfo is None for d in dates):
-        raise AuditError('Fuseau horaire absent')
+    server_date = parsedate_to_datetime(internal[1].decode('ascii').replace('-', ' ', 2))
+    if server_date.tzinfo is None:
+        raise AuditError('Fuseau horaire de la date serveur absent')
+    # Read the original value: policy.default may normalize a missing zone to -0000.
+    raw_dates = [value for name, value in message.raw_items() if name.lower() == 'date']
+    if len(raw_dates) != 1:
+        raise AuditError('Date du message absente ou multiple')
+    raw_date = raw_dates[0].strip()
+    mail_date = parsedate_to_datetime(raw_date)
+    if mail_date.tzinfo is None:
+        # RFC -0000 is UTC with an unspecified source zone, not a missing time zone.
+        # Do not infer UTC for dates with a genuinely absent or unrecognized zone.
+        if re.search(r'\s-0000$', raw_date):
+            mail_date = mail_date.replace(tzinfo=UTC)
+        else:
+            raise AuditError('Fuseau horaire du message absent ou non reconnu')
+    dates = [server_date, mail_date]
     ids = set(re.findall(r'<[^<>\s]+>', ' '.join(str(message.get(h, '')) for h in ('Message-ID', 'References', 'In-Reply-To'))))
     if not re.fullmatch(r'<[^<>\s]+>', str(message.get('Message-ID', '')).strip()):
         raise AuditError('Message-ID absent ou ambigu')

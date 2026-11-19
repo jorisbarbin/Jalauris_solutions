@@ -69,3 +69,7 @@ Une suppression IMAP ne supprime ni les copies Resend, ni les sauvegardes Gandi,
 - [Gandi — paramètres IMAP](https://docs.gandi.net/en/gandimail/standard_email_settings/)
 - [Python — imaplib, lecture seule et commandes UID](https://docs.python.org/3/library/imaplib.html)
 - [Resend — rétention et effacement](https://resend.com/security/gdpr)
+
+### Lecture des dates UTC
+
+Le fuseau explicite `-0000` est interprété comme UTC conformément à la [documentation Python](https://docs.python.org/3/library/email.utils.html#email.utils.parsedate_to_datetime). Une date sans fuseau ou avec un fuseau inconnu continue de bloquer l’audit. La valeur brute de l’en-tête est examinée pour éviter une normalisation trompeuse.

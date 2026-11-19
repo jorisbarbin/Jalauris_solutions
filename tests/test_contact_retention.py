@@ -43,6 +43,23 @@ class RetentionTests(unittest.TestCase):
     def test_missing_date_aborts(self):
         with self.assertRaises((ValueError, TypeError)):
             parse_message('SansSuite', '42', '1', b'INTERNALDATE "01-Jan-2025 00:00:00 +0000"', b'Message-ID: <a@b>\r\n', OWN)
+    def test_negative_zero_zone_is_utc(self):
+        raw = b'Date: Thu, 19 Nov 2026 15:00:00 -0000\r\nMessage-ID: <a@b>\r\nFrom: client@example.org\r\n\r\n'
+        m = parse_message('SansSuite', '42', '1', b'INTERNALDATE "19-Nov-2026 15:00:00 +0100"', raw, OWN)
+        self.assertEqual(m['date'], datetime(2026, 11, 19, 15, tzinfo=timezone.utc))
+        self.assertEqual(self.evaluate([m])['status'], 'bloque')
+
+    def test_missing_or_unknown_zone_not_inferred(self):
+        for zone in ('', 'UNKNOWN'):
+            raw = ('Date: Thu, 19 Nov 2026 15:00:00 ' + zone + '\r\nMessage-ID: <a@b>\r\n\r\n').encode()
+            with self.assertRaisesRegex(AuditError, 'Fuseau horaire du message'):
+                parse_message('SansSuite', '42', '1', b'INTERNALDATE "19-Nov-2026 15:00:00 +0000"', raw, OWN)
+
+    def test_multiple_dates_rejected(self):
+        raw = b'Date: Thu, 19 Nov 2026 15:00:00 +0000\r\nDate: Wed, 1 Jan 2025 00:00:00 +0000\r\nMessage-ID: <a@b>\r\n'
+        with self.assertRaisesRegex(AuditError, 'multiple'):
+            parse_message('SansSuite', '42', '1', b'INTERNALDATE "19-Nov-2026 15:00:00 +0000"', raw, OWN)
+
     def test_list_parsing_and_abort(self):
         self.assertEqual(folders_from_list([b'(\\Noselect) "/" "Parent"', b'(\\Sent) "/" "Sent"']), ['Sent'])
         with self.assertRaises(ValueError):
