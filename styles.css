@@ -91,3 +91,13 @@ input,select,textarea{width:100%;min-width:0;border:1px solid #cfdee8;background
 .button-primary:disabled{opacity:.55;cursor:not-allowed}
 .form-note[role="status"]{min-height:35px}
 .footer-bottom a{color:#b9def2;text-decoration:underline;text-underline-offset:3px}
+
+/* Informations RGPD : lisibilité du formulaire et page de confidentialité */
+.privacy-notice{font-size:12px;line-height:1.8;color:var(--muted);margin:0}
+.privacy-notice a,.privacy-content a{color:#176594;text-decoration:underline;text-underline-offset:3px;font-weight:600}
+.privacy-hero{background:var(--navy);color:#fff;padding:52px 0 76px}
+.privacy-hero .eyebrow{color:#8ed2f6}.privacy-hero h1{font-size:clamp(32px,4vw,49px);margin-bottom:16px}.privacy-hero p:not(.eyebrow){max-width:780px;color:#d1e1ec;line-height:1.8;font-size:16px}.privacy-hero small{color:#a7becd}
+.privacy-back{display:inline-block;color:#b6e5ff;font-size:13px;font-weight:600;margin-bottom:48px}
+.privacy-content{max-width:900px}.privacy-content h2{font-size:22px;margin:32px 0 13px}.privacy-content h2:first-child{margin-top:0}
+.privacy-content p,.privacy-content li{font-size:15px;line-height:1.85;color:var(--muted)}.privacy-content ul{padding-left:22px}.privacy-content li{padding-bottom:9px}
+@media(max-width:700px){.privacy-hero{padding:35px 0 55px}.privacy-back{margin-bottom:36px}.privacy-content h2{font-size:20px}}
