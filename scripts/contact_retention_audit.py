@@ -27,6 +27,25 @@ def anniversary(date):
     return date.replace(year=year, day=min(date.day, calendar.monthrange(year, date.month)[1]))
 
 
+def is_reviewed_welcome(folder, validity, uid, message):
+    """One administrative message reviewed with the owner on 2026-11-19.
+
+    This is an audit-only exception, never a deletion permission. A move,
+    UIDVALIDITY change or header mismatch invalidates the exception.
+    """
+    if (folder, validity, uid) != ('INBOX', '1794840065', '1'):
+        return False
+    expected = {
+        'From': 'solution@jalauris.fr', 'To': 'solution@jalauris.fr',
+        'Subject': '[GANDI] Bienvenue', 'Date': 'Mon, 16 Nov 2026 14:41:04 -0000',
+    }
+    for header, value in expected.items():
+        values = [v.strip() for k, v in message.raw_items() if k.lower() == header.lower()]
+        if values != [value]:
+            return False
+    return not any(message.get_all(h) for h in ('Message-ID', 'References', 'In-Reply-To', 'Cc', 'Reply-To'))
+
+
 def parse_message(folder, validity, uid, metadata, raw, own):
     message = BytesParser(policy=policy.default).parsebytes(raw)
     if message.defects:
@@ -58,6 +77,7 @@ def parse_message(folder, validity, uid, metadata, raw, own):
         issues.append('message_id_absent_ou_ambigu')
     addresses = {a.casefold() for _, a in getaddresses([str(message.get(h, '')) for h in ('From', 'To', 'Cc', 'Reply-To')]) if '@' in a}
     return {'folder': folder, 'uidvalidity': validity, 'uid': uid, 'issues': issues,
+            'reviewed_non_contact': is_reviewed_welcome(folder, validity, uid, message),
             'date': max(d.astimezone(UTC) for d in dates),
             'keys': {'id:'+i for i in ids} | {'address:'+a for a in addresses-own},
             'external': bool(addresses-own)}
@@ -86,7 +106,7 @@ def review(messages, candidate, sent, now):
             continue
         last = max(m['date'] for m in group)
         reasons = []
-        if any(m.get('issues') for m in messages):
+        if any(m.get('issues') and not m.get('reviewed_non_contact') for m in messages):
             reasons.append('identifiants_incomplets_dans_la_boite_verification_manuelle_requise')
         if any(m['folder'] not in {candidate, *sent} for m in group):
             reasons.append('echange_dans_un_autre_dossier')
@@ -143,7 +163,7 @@ def scan(client, candidate, sent, own, limit):
         if len(messages) + len(uids) > limit:
             raise AuditError('Limite de volume dépassée : audit interrompu')
         for uid in uids:
-            data = checked(client.uid('FETCH', uid, '(UID INTERNALDATE BODY.PEEK[HEADER.FIELDS (DATE MESSAGE-ID REFERENCES IN-REPLY-TO FROM TO CC REPLY-TO)])'))
+            data = checked(client.uid('FETCH', uid, '(UID INTERNALDATE BODY.PEEK[HEADER.FIELDS (DATE MESSAGE-ID REFERENCES IN-REPLY-TO FROM TO CC REPLY-TO SUBJECT)])'))
             payloads = [v for v in data if isinstance(v, tuple)]
             if len(payloads) != 1:
                 raise AuditError('Message disparu ou lecture ambiguë')
@@ -193,7 +213,7 @@ def main():
     now = datetime.now(UTC)
     print(json.dumps({'mode': 'lecture_seule', 'deletion_enabled': False, 'generated_at': now.isoformat(),
                       'warning': 'Instantané indicatif, jamais une autorisation de suppression. Vérifier les échanges hors IMAP.',
-                      'anomalies': [{k: m[k] for k in ('folder', 'uidvalidity', 'uid', 'issues')} for m in messages if m.get('issues')],
+                      'anomalies': [{k: m[k] for k in ('folder', 'uidvalidity', 'uid', 'issues', 'reviewed_non_contact')} for m in messages if m.get('issues')],
                       'scanned_messages': len(messages), 'groups': review(messages, args.candidate_folder, set(args.sent_folder), now)}, ensure_ascii=False, indent=2))
 
 

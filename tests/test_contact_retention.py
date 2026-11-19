@@ -96,6 +96,37 @@ class RetentionTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             scan(Fake(), 'SansSuite', {'Sent'}, OWN, 10)
 
+class WelcomeExceptionTests(unittest.TestCase):
+    raw = b'From: solution@jalauris.fr\r\nTo: solution@jalauris.fr\r\nSubject: [GANDI] Bienvenue\r\nDate: Mon, 16 Nov 2026 14:41:04 -0000\r\n\r\n'
+
+    def parse(self, folder='INBOX', validity='1794840065', uid='1', raw=None):
+        return parse_message(folder, validity, uid, b'INTERNALDATE "16-Nov-2026 14:41:04 +0000"', self.raw if raw is None else raw, OWN)
+
+    def test_reviewed_welcome_kept_and_reported(self):
+        welcome = self.parse()
+        self.assertTrue(welcome['reviewed_non_contact'])
+        self.assertTrue(welcome['issues'])
+        groups = review([msg(), welcome], 'SansSuite', {'Sent'}, NOW)
+        self.assertEqual(groups[0]['status'], 'a_verifier_manuellement')
+        self.assertNotIn(welcome['folder'], [m['folder'] for m in groups[0]['messages']])
+
+    def test_exception_invalidated_by_identity_or_header_changes(self):
+        cases = [dict(folder='SansSuite'), dict(validity='2'), dict(uid='2'),
+                 dict(raw=self.raw.replace(b'Bienvenue', b'Autre')),
+                 dict(raw=self.raw.replace(b'16 Nov', b'17 Nov')),
+                 dict(raw=self.raw.replace(b'From: solution@jalauris.fr', b'From: client@example.org')),
+                 dict(raw=b'References: <a@b>\r\n' + self.raw),
+                 dict(raw=b'Reply-To: client@example.org\r\n' + self.raw)]
+        for case in cases:
+            with self.subTest(case=case):
+                welcome = self.parse(**case)
+                self.assertFalse(welcome['reviewed_non_contact'])
+                self.assertEqual(review([msg(), welcome], 'SansSuite', {'Sent'}, NOW)[0]['status'], 'bloque')
+
+    def test_recent_contact_stays_blocked(self):
+        group = review([msg(date=NOW), self.parse()], 'SansSuite', {'Sent'}, NOW)[0]
+        self.assertEqual(group['reasons'], ['moins_de_12_mois_ou_date_future'])
+
 class DiagnosticTests(unittest.TestCase):
     def test_list_only_never_selects_or_fetches(self):
         client = MagicMock()

@@ -77,3 +77,7 @@ Le fuseau explicite `-0000` est interprété comme UTC conformément à la [docu
 ### Identifiants absents ou ambigus
 
 Un Message-ID absent, mal formé ou multiple n’interrompt plus la lecture et le message n’est jamais omis. Le rapport indique l’anomalie avec dossier/UID/UIDVALIDITY, sans contenu ni adresse. Comme les liens entre échanges peuvent être incomplets, toutes les demandes candidates sont bloquées pour vérification manuelle, même si le message anormal semble indépendant. Ce rapport de diagnostic ne constitue pas une liste de suppression. Ne pas supprimer un message uniquement pour faire disparaître l’anomalie.
+
+### Exception administrative vérifiée le 19 novembre 2026
+
+Les en-têtes fournis par le propriétaire identifient le message `[GANDI] Bienvenue` du 16 novembre 2026 à 14:41:04 UTC, sans Message-ID. L’audit autorise uniquement ce message à ne pas bloquer les autres demandes : INBOX, UIDVALIDITY `1794840065`, UID `1`, avec vérification exacte de From, To, Subject et Date, et absence de références de conversation, Cc et Reply-To. L’anomalie reste visible avec `reviewed_non_contact: true`. Le message reste lu dans l’inventaire et conservé, jamais proposé à suppression. Tout changement de dossier, de référence ou d’en-tête invalide cette exception ; les autres identifiants manquants restent bloquants. Le sujet est désormais lu en mémoire pour cette vérification, sans être inclus dans le rapport.
