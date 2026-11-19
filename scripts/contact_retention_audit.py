@@ -15,7 +15,11 @@ import ssl
 import sys
 
 UTC = timezone.utc
-OWN = {'solution@jalauris.fr', 'contact@jalauris.fr', 'rgpd@jalauris.fr'}
+OWN = {'solution@jalauris.fr', 'contact@jalauris.fr', 'rgpd@jalauris.fr', 'solutions@jalauris.fr'}
+
+
+class AuditError(ValueError):
+    """Only fixed, application-owned messages safe to display."""
 
 
 def anniversary(date):
@@ -26,17 +30,17 @@ def anniversary(date):
 def parse_message(folder, validity, uid, metadata, raw, own):
     message = BytesParser(policy=policy.default).parsebytes(raw)
     if message.defects:
-        raise ValueError('En-têtes non interprétables')
+        raise AuditError('En-têtes non interprétables')
     internal = re.search(rb'INTERNALDATE "([^"]+)"', metadata)
     if not internal:
-        raise ValueError('Date serveur absente')
+        raise AuditError('Date serveur absente')
     dates = [parsedate_to_datetime(internal[1].decode('ascii').replace('-', ' ', 2))]
     dates.append(parsedate_to_datetime(str(message['Date'])))
     if any(d.tzinfo is None for d in dates):
-        raise ValueError('Fuseau horaire absent')
+        raise AuditError('Fuseau horaire absent')
     ids = set(re.findall(r'<[^<>\s]+>', ' '.join(str(message.get(h, '')) for h in ('Message-ID', 'References', 'In-Reply-To'))))
     if not re.fullmatch(r'<[^<>\s]+>', str(message.get('Message-ID', '')).strip()):
-        raise ValueError('Message-ID absent ou ambigu')
+        raise AuditError('Message-ID absent ou ambigu')
     addresses = {a.casefold() for _, a in getaddresses([str(message.get(h, '')) for h in ('From', 'To', 'Cc', 'Reply-To')]) if '@' in a}
     return {'folder': folder, 'uidvalidity': validity, 'uid': uid,
             'date': max(d.astimezone(UTC) for d in dates),
@@ -83,7 +87,7 @@ def review(messages, candidate, sent, now):
 def checked(response):
     status, data = response
     if status != 'OK' or data is None:
-        raise ValueError('Lecture IMAP incomplète')
+        raise AuditError('Lecture IMAP incomplète')
     return data
 
 
@@ -92,17 +96,17 @@ def folders_from_list(lines):
     for line in lines:
         # Unsupported LIST literals/encodings abort; never silently omit a mailbox.
         if not isinstance(line, bytes):
-            raise ValueError('Format LIST non pris en charge')
+            raise AuditError('Format LIST non pris en charge')
         match = re.fullmatch(rb'\(([^)]*)\) (?:NIL|"(?:[^"\\]|\\.)*") (.+)', line)
         if not match:
-            raise ValueError('Format de dossier non pris en charge')
+            raise AuditError('Format de dossier non pris en charge')
         if b'\\noselect' in match[1].lower().split():
             continue
         name = match[2]
         if name.startswith(b'"') and name.endswith(b'"'):
             name = re.sub(rb'\\(.)', rb'\1', name[1:-1])
         elif name.startswith(b'{'):
-            raise ValueError('Nom de dossier littéral non pris en charge')
+            raise AuditError('Nom de dossier littéral non pris en charge')
         folders.append(name.decode('ascii'))
     return folders
 
@@ -110,47 +114,65 @@ def folders_from_list(lines):
 def scan(client, candidate, sent, own, limit):
     folders = folders_from_list(checked(client.list('""', '*')))
     if candidate not in folders or not sent or not sent <= set(folders) or candidate in sent:
-        raise ValueError('Dossiers sans suite / envoyés à vérifier')
+        raise AuditError('Dossiers sans suite / envoyés à vérifier')
     messages = []
     for folder in folders:
         quoted = '"' + folder.replace('\\', '\\\\').replace('"', '\\"') + '"'
         checked(client.select(quoted, readonly=True))
         validity = client.response('UIDVALIDITY')[1]
         if not validity or not validity[0] or not validity[0].isdigit():
-            raise ValueError('UIDVALIDITY absent')
+            raise AuditError('UIDVALIDITY absent')
         uids = checked(client.uid('SEARCH', None, 'ALL'))[0].split()
         if len(messages) + len(uids) > limit:
-            raise ValueError('Limite de volume dépassée : audit interrompu')
+            raise AuditError('Limite de volume dépassée : audit interrompu')
         for uid in uids:
             data = checked(client.uid('FETCH', uid, '(UID INTERNALDATE BODY.PEEK[HEADER.FIELDS (DATE MESSAGE-ID REFERENCES IN-REPLY-TO FROM TO CC REPLY-TO)])'))
             payloads = [v for v in data if isinstance(v, tuple)]
             if len(payloads) != 1:
-                raise ValueError('Message disparu ou lecture ambiguë')
+                raise AuditError('Message disparu ou lecture ambiguë')
             metadata, raw = payloads[0]
             actual = re.search(rb'\bUID (\d+)\b', metadata)
             if not actual or actual[1] != uid:
-                raise ValueError('UID incohérent')
+                raise AuditError('UID incohérent')
             messages.append(parse_message(folder, validity[0].decode(), uid.decode(), metadata, raw, own))
         # Detect changes during a folder scan. The report remains a non-atomic snapshot.
         if checked(client.uid('SEARCH', None, 'ALL'))[0].split() != uids:
-            raise ValueError('Dossier modifié pendant la lecture : relancer')
+            raise AuditError('Dossier modifié pendant la lecture : relancer')
     if folders_from_list(checked(client.list('""', '*'))) != folders:
-        raise ValueError('Liste des dossiers modifiée : relancer')
+        raise AuditError('Liste des dossiers modifiée : relancer')
     return messages
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--candidate-folder', required=True, help='Nom IMAP exact du dossier classé sans suite')
-    parser.add_argument('--sent-folder', action='append', required=True, help='Répéter pour chaque dossier envoyé')
+    parser.add_argument('--list-folders', action='store_true', help='Lister seulement les noms techniques des dossiers, sans lire les messages')
+    parser.add_argument('--candidate-folder', help='Nom IMAP exact du dossier classé sans suite')
+    parser.add_argument('--sent-folder', action='append', help='Répéter pour chaque dossier envoyé')
     parser.add_argument('--own-address', action='append', default=[], help='Alias supplémentaires de JALAURIS')
     parser.add_argument('--max-messages', type=int, default=10000)
     args = parser.parse_args()
+    if not args.list_folders and (not args.candidate_folder or not args.sent_folder):
+        parser.error('--candidate-folder et --sent-folder sont nécessaires pour un audit')
     password = os.environ.get('JALAURIS_IMAP_PASSWORD') or getpass.getpass('Mot de passe IMAP Gandi (non affiché) : ')
-    with imaplib.IMAP4_SSL('mail.gandi.net', 993, ssl_context=ssl.create_default_context(), timeout=30) as client:
-        checked(client.login('solution@jalauris.fr', password))
-        del password
-        messages = scan(client, args.candidate_folder, set(args.sent_folder), OWN | {a.casefold() for a in args.own_address}, args.max_messages)
+    stage = 'connexion sécurisée à Gandi'
+    try:
+        with imaplib.IMAP4_SSL('mail.gandi.net', 993, ssl_context=ssl.create_default_context(), timeout=30) as client:
+            stage = 'authentification (identifiant, mot de passe ou accès IMAP à vérifier)'
+            checked(client.login('solution@jalauris.fr', password))
+            del password
+            print('Connexion IMAP et authentification réussies.', file=sys.stderr)
+            stage = 'lecture de la liste des dossiers'
+            if args.list_folders:
+                folders = folders_from_list(checked(client.list('""', '*')))
+                print(json.dumps({'mode': 'liste_dossiers_seulement', 'folders': folders}, ensure_ascii=False, indent=2))
+                return
+            stage = 'lecture des dossiers et des en-têtes (date ou format à vérifier)'
+            messages = scan(client, args.candidate_folder, set(args.sent_folder), OWN | {a.casefold() for a in args.own_address}, args.max_messages)
+            stage = 'fermeture de la connexion'
+    except AuditError:
+        raise
+    except (ValueError, TypeError, OverflowError, OSError, imaplib.IMAP4.error) as from_error:
+        raise AuditError('Échec pendant : ' + stage) from None
     now = datetime.now(UTC)
     print(json.dumps({'mode': 'lecture_seule', 'deletion_enabled': False, 'generated_at': now.isoformat(),
                       'warning': 'Instantané indicatif, jamais une autorisation de suppression. Vérifier les échanges hors IMAP.',
@@ -160,6 +182,9 @@ def main():
 if __name__ == '__main__':
     try:
         main()
+    except AuditError as error:
+        print('Audit interrompu : ' + str(error) + '. Aucun message modifié ; aucun rapport d’audit produit.', file=sys.stderr)
+        sys.exit(1)
     except (ValueError, TypeError, OverflowError, OSError, imaplib.IMAP4.error):
         # Do not print server exceptions: they can contain mailbox data or credentials.
         print('Audit interrompu : configuration, accès ou données à vérifier. Aucun message modifié ; aucun rapport partiel.', file=sys.stderr)

@@ -28,6 +28,14 @@ Depuis la racine du dépôt, après vérification des noms IMAP exacts :
 python3 scripts/contact_retention_audit.py --candidate-folder 'Demandes sans suite' --sent-folder 'Sent'
 ```
 
+Pour identifier les noms techniques avant l’audit, sans lire les messages :
+
+```sh
+python3 scripts/contact_retention_audit.py --list-folders
+```
+
+Ce mode affiche uniquement les noms de dossiers ; ils peuvent eux-mêmes contenir des noms de clients, à masquer avant partage. Le diagnostic distingue la connexion, l’authentification et la lecture, sans afficher les réponses brutes du serveur.
+
 `Sent` est un exemple, pas un nom confirmé chez Gandi. Répéter `--sent-folder` pour tous les dossiers envoyés et `--own-address` pour les alias supplémentaires. Les noms internationaux doivent utiliser leur représentation IMAP modified UTF-7 ; un format non reconnu interrompt l’audit plutôt que d’omettre le dossier.
 
 Le script énumère tous les dossiers sélectionnables (pas seulement les abonnements), ouvre en lecture seule et ne récupère que les en-têtes avec `BODY.PEEK`, sans marquer les messages comme lus. Il rapproche les identifiants `Message-ID`, `References`, `In-Reply-To` et les adresses externes, notamment `Reply-To` du formulaire. Le rapprochement par correspondant est volontairement conservateur : plusieurs demandes indépendantes peuvent être bloquées ensemble. Il retient la plus récente des dates de message et de serveur, puis celle de tous les échanges liés. Un message lié dans tout autre dossier que « sans suite » ou les dossiers envoyés bloque la proposition (y compris corbeille et archives).

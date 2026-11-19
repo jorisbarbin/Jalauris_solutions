@@ -1,4 +1,9 @@
 import unittest
+from unittest.mock import patch, MagicMock
+from contextlib import redirect_stdout, redirect_stderr
+import io
+import imaplib
+from scripts.contact_retention_audit import main, AuditError
 from datetime import datetime, timezone
 from scripts.contact_retention_audit import anniversary, parse_message, review, scan, folders_from_list, OWN
 
@@ -58,5 +63,30 @@ class RetentionTests(unittest.TestCase):
             def list(self, *args): return 'OK', [b'() "/" "SansSuite"']
         with self.assertRaises(ValueError):
             scan(Fake(), 'SansSuite', {'Sent'}, OWN, 10)
+
+class DiagnosticTests(unittest.TestCase):
+    def test_list_only_never_selects_or_fetches(self):
+        client = MagicMock()
+        client.login.return_value = ('OK', [b'ok'])
+        client.list.return_value = ('OK', [b'() "/" "Sent"'])
+        client.__enter__.return_value = client
+        output = io.StringIO()
+        with patch('sys.argv', ['audit', '--list-folders']), patch.dict('os.environ', {'JALAURIS_IMAP_PASSWORD': 'private-secret'}), patch('imaplib.IMAP4_SSL', return_value=client), redirect_stdout(output), redirect_stderr(io.StringIO()):
+            main()
+        self.assertIn('Sent', output.getvalue())
+        self.assertNotIn('private-secret', output.getvalue())
+        client.select.assert_not_called()
+        client.uid.assert_not_called()
+
+    def test_login_failure_hides_server_text(self):
+        client = MagicMock()
+        client.__enter__.return_value = client
+        client.login.side_effect = imaplib.IMAP4.error('sensitive server response')
+        with patch('sys.argv', ['audit', '--list-folders']), patch.dict('os.environ', {'JALAURIS_IMAP_PASSWORD': 'private-secret'}), patch('imaplib.IMAP4_SSL', return_value=client):
+            with self.assertRaises(AuditError) as error:
+                main()
+        self.assertIn('authentification', str(error.exception))
+        self.assertNotIn('sensitive', str(error.exception))
+        self.assertNotIn('private-secret', str(error.exception))
 
 if __name__ == '__main__': unittest.main()
