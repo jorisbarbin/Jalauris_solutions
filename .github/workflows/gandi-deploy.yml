@@ -1,8 +1,10 @@
 name: Déploiement JALAURIS vers Gandi
 
-# Première phase : lancement manuel uniquement.
-# Le déclenchement automatique sur main sera activé après validation du site Gandi.
+# Publication automatique sur main, avec simulation manuelle toujours disponible.
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       deploy:
@@ -92,13 +94,13 @@ jobs:
           chmod 600 ~/.ssh/known_hosts
 
       - name: Test sans publication
-        if: ${{ !inputs.deploy }}
+        if: ${{ github.event_name == 'workflow_dispatch' && !inputs.deploy }}
         shell: bash
         run: |
           echo "Simulation terminée : aucun fichier transféré vers Gandi."
 
       - name: Publier via SFTP sans toucher au dossier privé
-        if: ${{ inputs.deploy }}
+        if: ${{ github.event_name == 'push' || inputs.deploy }}
         env:
           SFTP_HOST: ${{ vars.GANDI_SFTP_HOST }}
           SFTP_USER: ${{ vars.GANDI_SFTP_USER }}
