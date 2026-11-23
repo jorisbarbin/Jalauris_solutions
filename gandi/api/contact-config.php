@@ -10,23 +10,26 @@ function respond(int $status, array $payload): never {
     exit;
 }
 
-if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'GET') {
     header('Allow: GET');
     respond(405, ['error' => 'Méthode non autorisée']);
 }
 
-// Les secrets ne doivent jamais être enregistrés dans ce fichier.
-// Leur emplacement privé sur Gandi sera configuré lors de la mise en service.
+// Configuration privée hors de htdocs : ne jamais publier de clés secrètes dans GitHub.
+$configPath = '/srv/data/web/vhosts/jalauris-solutions.fr/config/jalauris-config.php';
+$config = is_readable($configPath) ? require $configPath : null;
 $required = ['TURNSTILE_SITE_KEY', 'TURNSTILE_SECRET_KEY', 'RESEND_API_KEY', 'CONTACT_FROM_EMAIL', 'CONTACT_TO_EMAIL'];
-$configured = true;
-foreach ($required as $name) {
-    if (trim((string) getenv($name)) === '') {
-        $configured = false;
-        break;
+$configured = is_array($config);
+if ($configured) {
+    foreach ($required as $name) {
+        if (!isset($config[$name]) || !is_string($config[$name]) || trim($config[$name]) === '') {
+            $configured = false;
+            break;
+        }
     }
 }
 
 respond(200, [
     'configured' => $configured,
-    'siteKey' => $configured ? getenv('TURNSTILE_SITE_KEY') : null,
+    'siteKey' => $configured ? $config['TURNSTILE_SITE_KEY'] : null,
 ]);
