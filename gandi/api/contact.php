@@ -38,8 +38,14 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     reply(405, 'Méthode non autorisée.');
 }
 
-foreach (['TURNSTILE_SECRET_KEY', 'RESEND_API_KEY', 'CONTACT_FROM_EMAIL', 'CONTACT_TO_EMAIL'] as $name) {
-    if (trim((string) getenv($name)) === '') {
+// Configuration privée Gandi, extérieure au répertoire public htdocs.
+$configPath = '/srv/data/web/vhosts/jalauris-solutions.fr/config/jalauris-config.php';
+$config = is_readable($configPath) ? require $configPath : null;
+if (!is_array($config)) {
+    reply(503, 'Le formulaire n’est pas encore disponible.');
+}
+foreach (['TURNSTILE_SITE_KEY', 'TURNSTILE_SECRET_KEY', 'RESEND_API_KEY', 'CONTACT_FROM_EMAIL', 'CONTACT_TO_EMAIL'] as $name) {
+    if (!isset($config[$name]) || !is_string($config[$name]) || trim($config[$name]) === '') {
         reply(503, 'Le formulaire n’est pas encore disponible.');
     }
 }
@@ -74,7 +80,7 @@ if ($verifyRequest === false) reply(502, 'Service de vérification indisponible.
 curl_setopt_array($verifyRequest, [
     CURLOPT_POST => true,
     CURLOPT_POSTFIELDS => http_build_query([
-        'secret' => getenv('TURNSTILE_SECRET_KEY'),
+        'secret' => $config['TURNSTILE_SECRET_KEY'],
         'response' => $token,
     ]),
     CURLOPT_RETURNTRANSFER => true,
@@ -108,15 +114,15 @@ $lines = [
 ];
 $text = implode("\n", $lines);
 $send = postJson('https://api.resend.com/emails', [
-    'from' => getenv('CONTACT_FROM_EMAIL'),
-    'to' => [getenv('CONTACT_TO_EMAIL')],
+    'from' => $config['CONTACT_FROM_EMAIL'],
+    'to' => [$config['CONTACT_TO_EMAIL']],
     'reply_to' => $email,
     'subject' => '[JALAURIS] ' . $besoin,
     'text' => $text,
     'html' => '<pre style="white-space:pre-wrap;font-family:sans-serif">'
         . htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
         . '</pre>',
-], ['Authorization: Bearer ' . getenv('RESEND_API_KEY')]);
+], ['Authorization: Bearer ' . $config['RESEND_API_KEY']]);
 
 if ($send === null || $send['status'] < 200 || $send['status'] >= 300) {
     error_log('Envoi Resend refusé par le prestataire.');
