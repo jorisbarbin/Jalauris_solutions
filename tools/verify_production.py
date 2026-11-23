@@ -27,7 +27,11 @@ def verify():
             code, headers, body = request(path)
             if code != 200 or hashlib.sha256(body).digest() != hashlib.sha256((ROOT / name).read_bytes()).digest():
                 failures.append(f'{path}: unexpected status/content ({code})')
-            if headers.get('X-Content-Type-Options') != 'nosniff':
+            if (headers.get('X-Content-Type-Options') != 'nosniff'
+                    or headers.get('X-Frame-Options') != 'DENY'
+                    or not headers.get('Content-Security-Policy')
+                    or not headers.get('Referrer-Policy')
+                    or not headers.get('Permissions-Policy')):
                 failures.append(f'{path}: missing security header')
             if 'max-age=60' not in headers.get('Cache-Control', ''):
                 failures.append(f'{path}: missing bounded cache policy')
