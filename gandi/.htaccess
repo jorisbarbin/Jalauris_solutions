@@ -1,0 +1,7 @@
+# Routage des fonctions PHP sur Gandi (déployer ce fichier à la racine de htdocs).
+# Conserver les URL utilisées par le JavaScript du site et par Vercel.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^api/contact-config/?$ api/contact-config.php [END]
+    RewriteRule ^api/contact/?$ api/contact.php [END]
+</IfModule>
