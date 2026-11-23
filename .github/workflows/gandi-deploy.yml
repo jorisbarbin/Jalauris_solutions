@@ -1,0 +1,128 @@
+name: Déploiement JALAURIS vers Gandi
+
+# Première phase : lancement manuel uniquement.
+# Le déclenchement automatique sur main sera activé après validation du site Gandi.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gandi-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+
+      - name: Préparer uniquement les fichiers publics
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import shutil
+          import subprocess
+
+          root = Path.cwd()
+          target = root / "_gandi_deploy"
+          target.mkdir()
+          allowed = {".html", ".css", ".js", ".svg", ".png", ".jpg",
+                     ".jpeg", ".webp", ".gif", ".avif", ".ico", ".xml",
+                     ".txt", ".webmanifest", ".woff", ".woff2", ".ttf", ".otf"}
+          blocked_folders = {".github", ".git", "api", "gandi", "node_modules", "_gandi_deploy"}
+          tracked = subprocess.check_output(["git", "ls-files", "-z"]).decode().split("\0")
+          for entry in tracked:
+              if not entry:
+                  continue
+              source = Path(entry)
+              if source.parts[0] in blocked_folders or source.suffix.lower() not in allowed:
+                  continue
+              destination = target / source
+              destination.parent.mkdir(parents=True, exist_ok=True)
+              shutil.copy2(source, destination)
+
+          for src, dest in [
+              ("gandi/api/contact.php", "api/contact.php"),
+              ("gandi/api/contact-config.php", "api/contact-config.php"),
+              ("gandi/.htaccess", ".htaccess"),
+          ]:
+              path = target / dest
+              path.parent.mkdir(parents=True, exist_ok=True)
+              shutil.copy2(root / src, path)
+
+          if not (target / "index.html").exists():
+              raise SystemExit("Erreur : index.html absent du lot de déploiement.")
+          print("Fichiers publics prêts :", len([p for p in target.rglob("*") if p.is_file()]))
+          print("Aucun fichier privé config/ dans le lot de déploiement.")
+          PY
+
+      - name: Installer la clé SSH temporaire
+        env:
+          GANDI_SSH_PRIVATE_KEY: ${{ secrets.GANDI_SSH_PRIVATE_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$GANDI_SSH_PRIVATE_KEY"
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$GANDI_SSH_PRIVATE_KEY" > ~/.ssh/jalauris_deploy
+          chmod 600 ~/.ssh/jalauris_deploy
+
+      - name: Vérifier l'identité du serveur Gandi
+        env:
+          SFTP_HOST: ${{ vars.GANDI_SFTP_HOST }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$SFTP_HOST"
+          ssh-keyscan -T 10 -t ed25519 "$SFTP_HOST" > ~/.ssh/known_hosts
+          ssh-keygen -lf ~/.ssh/known_hosts -E md5 | grep -F 'MD5:5a:f5:68:71:4b:86:b4:96:61:1c:5f:d9:b1:21:4f:31'
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Publier via SFTP sans toucher au dossier privé
+        env:
+          SFTP_HOST: ${{ vars.GANDI_SFTP_HOST }}
+          SFTP_USER: ${{ vars.GANDI_SFTP_USER }}
+          SFTP_PATH: ${{ vars.GANDI_DEPLOY_PATH }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$SFTP_HOST"
+          test -n "$SFTP_USER"
+          test -n "$SFTP_PATH"
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+
+          root = Path("_gandi_deploy")
+          remote = os.environ["SFTP_PATH"].rstrip("/")
+          if remote != "vhosts/jalauris-solutions.fr/htdocs":
+              raise SystemExit("Chemin Gandi inattendu : déploiement refusé.")
+
+          def quote(value):
+              if any(c in value for c in "\n\r"):
+                  raise ValueError("Nom de fichier non pris en charge")
+              return '"' + value.replace("\\", "\\\\").replace('"', '\\"') + '"'
+
+          paths = sorted(p for p in root.rglob("*") if p.is_file())
+          folders = sorted({p.parent for p in paths if p.parent != root},
+                           key=lambda p: (len(p.parts), str(p)))
+          with open("/tmp/gandi-sftp-batch", "w", encoding="utf-8") as batch:
+              for folder in folders:
+                  # Un échec 'dossier déjà existant' ne bloque pas les mises à jour.
+                  batch.write("-mkdir " + quote(remote + "/" + folder.relative_to(root).as_posix()) + "\n")
+              for file in paths:
+                  relative = file.relative_to(root).as_posix()
+                  batch.write("put " + quote(file.as_posix()) + " "
+                              + quote(remote + "/" + relative) + "\n")
+          print("Fichiers prévus pour le transfert :", len(paths))
+          PY
+          sftp -b /tmp/gandi-sftp-batch -i ~/.ssh/jalauris_deploy \
+            -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes \
+            "$SFTP_USER@$SFTP_HOST"
