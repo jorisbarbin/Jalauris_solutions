@@ -43,7 +43,8 @@ async function startContact() {
     if (!window.turnstile) throw new Error('Vérification anti-robots indisponible');
     turnstileId = window.turnstile.render('#turnstile-widget', {
       sitekey: config.siteKey,
-      size: window.matchMedia('(max-width: 420px)').matches ? 'compact' : 'flexible',
+      // Compact remains within the form when a desktop window is resized.
+      size: 'compact',
       callback: token => { turnstileToken = token; },
       'expired-callback': () => { turnstileToken = ''; },
       'error-callback': () => { turnstileToken = ''; feedback('La vérification anti-robots a échoué. Réessayez.'); }

@@ -111,3 +111,6 @@ input,select,textarea{width:100%;min-width:0;border:1px solid #cfdee8;background
 .contact-form label,.form-note,.privacy-notice{font-size:14px}
 .privacy-content a,.footer-bottom{overflow-wrap:anywhere}
 @media(max-width:360px){.contact-form{padding:12px}}
+
+.contact-form{grid-template-columns:minmax(0,1fr)}
+.contact-form > *{min-width:0;max-width:100%}
