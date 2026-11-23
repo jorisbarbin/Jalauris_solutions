@@ -104,3 +104,10 @@ input,select,textarea{width:100%;min-width:0;border:1px solid #cfdee8;background
 
 /* Informations juridiques à finaliser. */
 .legal-pending{border-left:4px solid #176594;padding:16px 20px;background:#eef6fb}
+
+/* Prevent form/grid overflow at narrow widths and browser text zoom. */
+.contact-inner > *, .contact-form, .form-grid > *{min-width:0}
+.contact-form input,.contact-form select,.contact-form textarea{font-size:16px}
+.contact-form label,.form-note,.privacy-notice{font-size:14px}
+.privacy-content a,.footer-bottom{overflow-wrap:anywhere}
+@media(max-width:360px){.contact-form{padding:12px}}

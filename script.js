@@ -28,7 +28,7 @@ function feedback(message) { if (helper) helper.textContent = message; }
 async function startContact() {
   if (!form || !submit) return;
   try {
-    const configResponse = await fetch('/api/contact-config', { cache: 'no-store' });
+    const configResponse = await fetch('/api/contact-config', { cache: 'no-store', signal: AbortSignal.timeout(15000) });
     if (!configResponse.ok) throw new Error('Configuration indisponible');
     const config = await configResponse.json();
     if (!config.configured || !config.siteKey) {
@@ -43,6 +43,7 @@ async function startContact() {
     if (!window.turnstile) throw new Error('Vérification anti-robots indisponible');
     turnstileId = window.turnstile.render('#turnstile-widget', {
       sitekey: config.siteKey,
+      size: 'flexible',
       callback: token => { turnstileToken = token; },
       'expired-callback': () => { turnstileToken = ''; },
       'error-callback': () => { turnstileToken = ''; feedback('La vérification anti-robots a échoué. Réessayez.'); }
@@ -65,13 +66,13 @@ form?.addEventListener('submit', async event => {
   submit.disabled = true;
   feedback('Envoi de votre demande…');
   try {
-    const response = await fetch('/api/contact', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    const response = await fetch('/api/contact', { method: 'POST', signal: AbortSignal.timeout(45000), headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
     const result = await response.json();
     if (!response.ok) throw new Error(result.message || 'L’envoi a échoué.');
     form.reset();
     feedback('Votre demande a bien été envoyée. Nous vous répondrons dès que possible.');
   } catch (error) {
-    feedback(error.message || 'L’envoi a échoué. Merci de réessayer.');
+    feedback(error.name === 'TimeoutError' ? 'Le délai de réponse est dépassé. Votre demande a peut-être été reçue ; évitez un envoi immédiat en double.' : (error.message || 'L’envoi a échoué. Merci de réessayer.'));
   } finally {
     isSending = false;
     turnstileToken = '';

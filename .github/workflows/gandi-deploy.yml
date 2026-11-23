@@ -28,47 +28,22 @@ jobs:
       - name: Récupérer le dépôt
         uses: actions/checkout@v4
 
+      - name: Tester avant publication
+        run: |
+          python3 tools/test_site.py
+          python3 tools/test_contact_php.py
+          node --check script.js
+
       - name: Préparer uniquement les fichiers publics
         shell: bash
         run: |
           set -euo pipefail
-          python3 - <<'PY'
-          from pathlib import Path
-          import shutil
-          import subprocess
+          python3 tools/prepare_deploy.py
 
-          root = Path.cwd()
-          target = root / "_gandi_deploy"
-          target.mkdir()
-          allowed = {".html", ".css", ".js", ".svg", ".png", ".jpg",
-                     ".jpeg", ".webp", ".gif", ".avif", ".ico", ".xml",
-                     ".txt", ".webmanifest", ".woff", ".woff2", ".ttf", ".otf"}
-          blocked_folders = {".github", ".git", "api", "gandi", "node_modules", "_gandi_deploy"}
-          tracked = subprocess.check_output(["git", "ls-files", "-z"]).decode().split("\0")
-          for entry in tracked:
-              if not entry:
-                  continue
-              source = Path(entry)
-              if source.parts[0] in blocked_folders or source.suffix.lower() not in allowed:
-                  continue
-              destination = target / source
-              destination.parent.mkdir(parents=True, exist_ok=True)
-              shutil.copy2(source, destination)
-
-          for src, dest in [
-              ("gandi/api/contact.php", "api/contact.php"),
-              ("gandi/api/contact-config.php", "api/contact-config.php"),
-              ("gandi/.htaccess", ".htaccess"),
-          ]:
-              path = target / dest
-              path.parent.mkdir(parents=True, exist_ok=True)
-              shutil.copy2(root / src, path)
-
-          if not (target / "index.html").exists():
-              raise SystemExit("Erreur : index.html absent du lot de déploiement.")
-          print("Fichiers publics prêts :", len([p for p in target.rglob("*") if p.is_file()]))
-          print("Aucun fichier privé config/ dans le lot de déploiement.")
-          PY
+      - name: Vérifier la syntaxe PHP
+        run: |
+          php -l gandi/api/contact.php
+          php -l gandi/api/contact-config.php
 
       - name: Installer la clé SSH temporaire
         env:
@@ -141,3 +116,11 @@ jobs:
           sftp -b /tmp/gandi-sftp-batch -i ~/.ssh/jalauris_deploy \
             -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes \
             "$SFTP_USER@$SFTP_HOST"
+
+      - name: Vérifier les fichiers servis après expiration du cache
+        if: ${{ github.event_name == 'push' || inputs.deploy }}
+        run: python3 tools/verify_production.py --timeout 240
+
+      - name: Retirer la clé temporaire
+        if: ${{ always() }}
+        run: rm -f ~/.ssh/jalauris_deploy /tmp/gandi-sftp-batch
