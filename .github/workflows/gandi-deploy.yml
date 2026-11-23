@@ -4,6 +4,12 @@ name: Déploiement JALAURIS vers Gandi
 # Le déclenchement automatique sur main sera activé après validation du site Gandi.
 on:
   workflow_dispatch:
+    inputs:
+      deploy:
+        description: "Publier les fichiers sur Gandi (laisser décoché pour un test sans transfert)"
+        type: boolean
+        required: true
+        default: false
 
 permissions:
   contents: read
@@ -85,7 +91,14 @@ jobs:
           ssh-keygen -lf ~/.ssh/known_hosts -E md5 | grep -F 'MD5:5a:f5:68:71:4b:86:b4:96:61:1c:5f:d9:b1:21:4f:31'
           chmod 600 ~/.ssh/known_hosts
 
+      - name: Test sans publication
+        if: ${{ !inputs.deploy }}
+        shell: bash
+        run: |
+          echo "Simulation terminée : aucun fichier transféré vers Gandi."
+
       - name: Publier via SFTP sans toucher au dossier privé
+        if: ${{ inputs.deploy }}
         env:
           SFTP_HOST: ${{ vars.GANDI_SFTP_HOST }}
           SFTP_USER: ${{ vars.GANDI_SFTP_USER }}
