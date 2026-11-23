@@ -45,6 +45,19 @@ def verify():
     code, _, _ = request('/audit-missing-page-2026.html')
     if code != 404:
         failures.append('missing page: expected 404')
+    # Do not follow redirects: verify exact target and preserve path/query.
+    class NoRedirect(urllib.request.HTTPRedirectHandler):
+        def redirect_request(self, req, fp, code, msg, headers, newurl):
+            return None
+    opener = urllib.request.build_opener(NoRedirect)
+    for path in ['/', '/prestations-informatiques.html?audit=https']:
+        try:
+            response = opener.open('http://jalauris-solutions.fr' + path, timeout=20)
+        except urllib.error.HTTPError as exc:
+            response = exc
+        with response:
+            if response.status != 301 or response.headers.get('Location') != BASE + path:
+                failures.append(f'{path}: HTTP to HTTPS redirect missing/incorrect')
     return failures
 
 if __name__ == '__main__':

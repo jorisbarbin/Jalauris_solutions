@@ -2,6 +2,12 @@
 # Conserver les URL utilisées par le JavaScript du site et par Vercel.
 <IfModule mod_rewrite.c>
     RewriteEngine On
+    # Approved apex-only HTTPS redirect; leave www and DNS unchanged.
+    # Gandi terminates TLS at its proxy: guard both scheme and forwarded proto.
+    RewriteCond %{HTTP_HOST} ^jalauris-solutions\.fr(?::80)?$ [NC]
+    RewriteCond %{REQUEST_SCHEME} =http
+    RewriteCond %{HTTP:X-Forwarded-Proto} !^https$ [NC]
+    RewriteRule ^ https://jalauris-solutions.fr%{REQUEST_URI} [R=301,L]
     RewriteRule ^api/contact-config/?$ api/contact-config.php [END]
     RewriteRule ^api/contact/?$ api/contact.php [END]
 </IfModule>
