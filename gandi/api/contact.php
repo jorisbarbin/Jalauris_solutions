@@ -50,7 +50,15 @@ foreach (['TURNSTILE_SITE_KEY', 'TURNSTILE_SECRET_KEY', 'RESEND_API_KEY', 'CONTA
     }
 }
 
-$raw = file_get_contents('php://input');
+// Bound reads before allocating the full request body.
+$contentType = strtolower(trim(explode(';', $_SERVER['CONTENT_TYPE'] ?? '')[0]));
+if ($contentType !== 'application/json') reply(415, 'Format de requête non pris en charge.');
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+if ($origin !== '' && !in_array($origin, ['https://jalauris-solutions.fr', 'https://www.jalauris-solutions.fr'], true)) {
+    reply(403, 'Origine non autorisée.');
+}
+if ((int) ($_SERVER['CONTENT_LENGTH'] ?? 0) > 16000) reply(413, 'Requête trop volumineuse.');
+$raw = file_get_contents('php://input', false, null, 0, 16001);
 if (!is_string($raw) || strlen($raw) > 16000) reply(400, 'Requête invalide.');
 $payload = json_decode($raw, true);
 if (!is_array($payload)) reply(400, 'Requête invalide.');

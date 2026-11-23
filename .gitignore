@@ -3,3 +3,10 @@
 __pycache__/
 *.pyc
 retention-report*.json
+
+# Private Gandi configuration must never enter Git.
+config/
+jalauris-config.php
+*.pem
+*.key
+_gandi_deploy/

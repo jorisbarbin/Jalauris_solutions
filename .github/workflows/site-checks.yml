@@ -1,0 +1,19 @@
+name: Vérifications du site
+on:
+  pull_request:
+  push:
+    branches: [main, 'audit/**']
+permissions:
+  contents: read
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 tools/test_site.py
+      - run: node --check script.js
+      - run: |
+          php -l gandi/api/contact.php
+          php -l gandi/api/contact-config.php
+          python3 tools/test_contact_php.py
+      - run: python3 -m unittest discover -s tests

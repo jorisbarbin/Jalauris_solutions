@@ -33,7 +33,7 @@ h1 span{color:#8ed2f6}.intro-lead{font-size:clamp(15px,1.5vw,17px);line-height:1
 .contact-form{padding:30px;border-radius:13px;border:1px solid var(--border);box-shadow:0 10px 38px #103a5410;display:grid;gap:17px}
 .contact-form label{display:grid;gap:8px;font-size:12px;font-weight:700}.contact-form label span{color:#af4f51}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}
-input,select,textarea{width:100%;min-width:0;border:1px solid #cfdee8;background:#fff;color:var(--text);border-radius:7px;padding:12px 13px;font-size:13px}textarea{resize:vertical;min-height:115px}input::placeholder,textarea::placeholder{color:#8598a8}
+input,select,textarea{width:100%;min-width:0;border:1px solid #cfdee8;background:#fff;color:var(--text);border-radius:7px;padding:12px 13px;font-size:13px}textarea{resize:vertical;min-height:115px}input::placeholder,textarea::placeholder{color:#556c7d}
 .button-primary{background:var(--navy);color:#fff;border:0;border-radius:7px;padding:14px 22px;cursor:pointer;justify-self:start;font-size:13px;font-weight:700;display:flex;align-items:center;gap:18px}.button-primary:hover{background:#205173}
 .form-note{font-size:11px;line-height:1.7;color:var(--muted);margin:0}
 .footer{background:#0a2133;color:#fff;padding-top:36px}.footer-main{display:flex;justify-content:space-between;gap:30px;align-items:start;padding-bottom:35px}
@@ -104,3 +104,10 @@ input,select,textarea{width:100%;min-width:0;border:1px solid #cfdee8;background
 
 /* Informations juridiques à finaliser. */
 .legal-pending{border-left:4px solid #176594;padding:16px 20px;background:#eef6fb}
+
+/* Prevent form/grid overflow at narrow widths and browser text zoom. */
+.contact-inner > *, .contact-form, .form-grid > *{min-width:0}
+.contact-form input,.contact-form select,.contact-form textarea{font-size:16px}
+.contact-form label,.form-note,.privacy-notice{font-size:14px}
+.privacy-content a,.footer-bottom{overflow-wrap:anywhere}
+@media(max-width:360px){.contact-form{padding:12px}}
